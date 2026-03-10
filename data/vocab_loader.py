@@ -15,6 +15,9 @@ class VocabRow:
     pos: str | None
     category: str | None
     subcategory: str | None
+    example: str | None
+    example_pinyin: str | None
+    example_meaning: str | None
 
 
 def _norm(s: str) -> str:
@@ -72,6 +75,9 @@ def load_vocab_first_300(excel_path: str | Path) -> list[VocabRow]:
     c_pinyin = pick("Pinyin", "拼音", "漢拼", "汉拼")
     c_pos = pick("Part of speech", "Partofspeech", "POS", "詞性", "词性")
     c_meaning = pick("English meaning", "Meaning", "English", "英文", "Englishmeaning")
+    c_example = pick("Example")
+    c_example_pinyin = pick("Example Pinyin")
+    c_example_meaning = pick("Example Meaning")
 
     if not c_trad:
         raise ValueError(
@@ -97,6 +103,9 @@ def load_vocab_first_300(excel_path: str | Path) -> list[VocabRow]:
                 pos=None if not c_pos or pd.isna(r.get(c_pos)) else str(r.get(c_pos)).strip(),
                 category=None if not c_category or pd.isna(r.get(c_category)) else str(r.get(c_category)).strip(),
                 subcategory=None if not c_subcategory or pd.isna(r.get(c_subcategory)) else str(r.get(c_subcategory)).strip(),
+                example=None if not c_example or pd.isna(r.get(c_example)) else str(r.get(c_example)).strip(),
+                example_pinyin=None if not c_example_pinyin or pd.isna(r.get(c_example_pinyin)) else str(r.get(c_example_pinyin)).strip(),
+                example_meaning=None if not c_example_meaning or pd.isna(r.get(c_example_meaning)) else str(r.get(c_example_meaning)).strip(),
             )
         )
         if len(out) >= 300:

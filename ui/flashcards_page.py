@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-from datetime import date
-
 import streamlit as st
 
 from ai.sentence_generator import get_or_create_example
-from ai.image_generator import get_or_create_word_image
-from audio.embed import safe_mp3_data_uri, safe_png_data_uri
+from audio.embed import safe_mp3_data_uri
 from audio.tts import tts_to_mp3_path
 from database import models
 from flashcards.flashcard_engine import StudyPlan, day_word_range
 from ui.components.flashcard_card import render_flashcard_card
 from utils.pinyin import numbers_to_tone_marks
-from utils.fallback_image import fallback_image_data_uri
 
 
 def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
@@ -57,27 +53,6 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
     ex = get_or_create_example(conn, word_id=word_id, word=char, pinyin=pinyin, meaning=meaning, pos=pos)
 
     char_audio_uri = safe_mp3_data_uri(tts_to_mp3_path(char, lang="zh-CN")) if flipped else None
-    ex_audio_uri = safe_mp3_data_uri(tts_to_mp3_path(ex.chinese, lang="zh-CN")) if flipped else None
-
-    image_uri = None
-    if flipped:
-        img_path = get_or_create_word_image(word_id=word_id, character=char, meaning=meaning)
-        image_uri = safe_png_data_uri(img_path) if img_path else None
-        if image_uri is None:
-            image_uri = fallback_image_data_uri(meaning, char)
-
-    breakdown: list[dict] = []
-    if flipped and len(char) > 1:
-        for ch in list(char):
-            row = models.get_word_by_character(conn, ch)
-            if row:
-                breakdown.append(
-                    {
-                        "character": str(row["character"]),
-                        "pinyin": numbers_to_tone_marks(str(row["pinyin"] or "")),
-                        "meaning": str(row["meaning"] or ""),
-                    }
-                )
 
     render_flashcard_card(
         flipped=flipped,
@@ -85,12 +60,9 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
         pinyin=pinyin,
         meaning=meaning,
         example_cn=ex.chinese,
-        example_py=numbers_to_tone_marks(ex.pinyin),
+        example_py=ex.pinyin,
         example_en=ex.english,
         word_audio_uri=char_audio_uri,
-        example_audio_uri=ex_audio_uri,
-        image_uri=image_uri,
-        character_breakdown=breakdown,
         height=440,
     )
 

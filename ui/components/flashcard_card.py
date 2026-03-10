@@ -16,9 +16,6 @@ def render_flashcard_card(
     example_py: str,
     example_en: str,
     word_audio_uri: str | None,
-    example_audio_uri: str | None,
-    image_uri: str | None,
-    character_breakdown: list[dict],
     height: int = 420,
 ) -> None:
     """
@@ -39,29 +36,6 @@ def render_flashcard_card(
         <button class="play" aria-label="play" onclick="(function(){{var a=document.getElementById('{audio_id}'); a.currentTime=0; a.play();}})()">▶</button>
         <audio id="{audio_id}" src="{uri}"></audio>
         """
-
-    img_html = (
-        f"""<img class="pic" src="{image_uri}" alt="image" />""" if image_uri else ""
-    )
-
-    breakdown_html = ""
-    if character_breakdown:
-        rows = []
-        for r in character_breakdown:
-            c = html.escape(str(r.get("character", "")))
-            py = html.escape(str(r.get("pinyin", "")) or "")
-            me = html.escape(str(r.get("meaning", "")) or "")
-            if not c:
-                continue
-            rows.append(
-                f"""<div class="bd-row"><div class="bd-c">{c}</div><div class="bd-m">{py} {("· " + me) if me else ""}</div></div>"""
-            )
-        if rows:
-            breakdown_html = (
-                """<div class="bd"><div class="bd-title">Characters</div>"""
-                + "".join(rows)
-                + "</div>"
-            )
 
     # Use fixed width matching the visual card width from earlier.
     html_doc = f"""
@@ -158,35 +132,6 @@ def render_flashcard_card(
           .ex-cn {{ font-size: 30px; }}
           .ex-py {{ margin-top: 6px; font-size: 20px; color: var(--muted); }}
           .ex-en {{ margin-top: 6px; font-size: 18px; color: var(--muted); }}
-          .pic {{
-            display:block;
-            margin: 16px auto 4px auto;
-            width: 150px;
-            height: 150px;
-            object-fit: contain;
-            border-radius: 14px;
-            background: rgba(0,0,0,0.20);
-            border: 1px solid rgba(255,255,255,0.10);
-          }}
-          .bd {{
-            margin-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.12);
-            padding-top: 12px;
-          }}
-          .bd-title {{
-            text-align:center;
-            font-weight: 800;
-            margin-bottom: 8px;
-          }}
-          .bd-row {{
-            display:flex;
-            align-items:baseline;
-            justify-content:center;
-            gap: 10px;
-            margin: 6px 0;
-          }}
-          .bd-c {{ font-size: 26px; }}
-          .bd-m {{ font-size: 18px; color: var(--muted); }}
         </style>
       </head>
       <body>
@@ -200,17 +145,14 @@ def render_flashcard_card(
                   <div class="char">{char_e}</div>
                 </div>
                 <div class="meta">{pinyin_e} · {meaning_e}</div>
-                {img_html}
                 <div class="section-title">Example</div>
                 <div class="example">
                   <div class="row-center" style="gap: 12px;">
-                    {audio_button('ex_audio', example_audio_uri)}
                     <div class="ex-cn">{ex_cn_e}</div>
                   </div>
                   <div class="ex-py">{ex_py_e}</div>
                   <div class="ex-en">{ex_en_e}</div>
                 </div>
-                {breakdown_html}
               </div>
             </div>
           </div>
