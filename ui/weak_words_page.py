@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+import streamlit as st
+
+from ai.sentence_generator import get_or_create_example
+from ai.image_generator import get_or_create_word_image
+from audio.embed import safe_mp3_data_uri, safe_png_data_uri
+from audio.tts import tts_to_mp3_path
+from database import models
+from ui.components.flashcard_card import render_flashcard_card
+from utils.pinyin import numbers_to_tone_marks
+from utils.fallback_image import fallback_image_data_uri
+
+
+def render_weak_words(conn, user: models.User) -> None:
+    st.title("Weak Words")
+
+    weak = models.list_weak_words(conn, user.id)
+    if not weak:
+        st.info("No weak words yet. A word becomes weak after 3 mistakes.")
+        return
+
+    st.subheader("Your weak words")
+    st.dataframe(
+        [{"id": int(r["id"]), "character": r["character"], "pinyin": r["pinyin"], "meaning": r["meaning"], "pos": r["pos"]} for r in weak],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.divider()
+    st.subheader("Practice weak words (flashcards)")
+
+    if "weak_idx" not in st.session_state or st.button("Restart practice"):
+        st.session_state["weak_idx"] = 0
+        st.session_state["weak_flipped"] = False
+
+    idx = int(st.session_state.get("weak_idx", 0))
+    idx = max(0, min(idx, len(weak) - 1))
+    st.session_state["weak_idx"] = idx
+
+    w = weak[idx]
+    word_id = int(w["id"])
+    char = str(w["character"])
+    pinyin = numbers_to_tone_marks(str(w["pinyin"] or ""))
+    meaning = str(w["meaning"] or "")
+
+    st.caption(f"Card {idx + 1} / {len(weak)}")
+
+    ex = get_or_create_example(conn, word_id=word_id, word=char, pinyin=pinyin, meaning=meaning)
+    flipped = bool(st.session_state.get("weak_flipped", False))
+
+    char_audio_uri = safe_mp3_data_uri(tts_to_mp3_path(char, lang="zh-CN")) if flipped else None
+    ex_audio_uri = safe_mp3_data_uri(tts_to_mp3_path(ex.chinese, lang="zh-CN")) if flipped else None
+
+    image_uri = None
+    if flipped:
+        img_path = get_or_create_word_image(word_id=word_id, character=char, meaning=meaning)
+        image_uri = safe_png_data_uri(img_path) if img_path else None
+        if image_uri is None:
+            image_uri = fallback_image_data_uri(meaning, char)
+
+    breakdown: list[dict] = []
+    if flipped and len(char) > 1:
+        for ch in list(char):
+            row = models.get_word_by_character(conn, ch)
+            if row:
+                breakdown.append(
+                    {
+                        "character": str(row["character"]),
+                        "pinyin": numbers_to_tone_marks(str(row["pinyin"] or "")),
+                        "meaning": str(row["meaning"] or ""),
+                    }
+                )
+
+    render_flashcard_card(
+        flipped=flipped,
+        character=char,
+        pinyin=pinyin,
+        meaning=meaning,
+        example_cn=ex.chinese,
+        example_py=numbers_to_tone_marks(ex.pinyin),
+        example_en=ex.english,
+        word_audio_uri=char_audio_uri,
+        example_audio_uri=ex_audio_uri,
+        image_uri=image_uri,
+        character_breakdown=breakdown,
+        height=440,
+    )
+
+    pad_l, mid, pad_r = st.columns([1, 6, 1])
+    with mid:
+        b1, b2, b3 = st.columns([1, 1, 1])
+        with b1:
+            if st.button("Flip", type="secondary", use_container_width=True):
+                st.session_state["weak_flipped"] = not flipped
+                st.rerun()
+        with b2:
+            if st.button("I knew this", type="primary", use_container_width=True):
+                models.record_flashcard_result(conn, user.id, word_id, knew=True)
+                _advance(len(weak))
+        with b3:
+            if st.button("I didn't know", use_container_width=True):
+                models.record_flashcard_result(conn, user.id, word_id, knew=False)
+                _advance(len(weak))
+
+
+def _advance(total: int) -> None:
+    st.session_state["weak_flipped"] = False
+    st.session_state["weak_idx"] = min(total - 1, int(st.session_state.get("weak_idx", 0)) + 1)
+    st.rerun()
+
+
+    # Card rendering is handled by ui.components.flashcard_card now.
+
