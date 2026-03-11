@@ -16,6 +16,7 @@ def render_flashcard_card(
     example_py: str,
     example_en: str,
     word_audio_uri: str | None,
+    example_audio_uri: str | None,
     height: int = 420,
 ) -> None:
     """
@@ -110,28 +111,28 @@ def render_flashcard_card(
             cursor: pointer;
           }}
           .char {{
-            font-size: 78px;
+            font-size: 86px;
             text-align:center;
           }}
           .meta {{
             margin-top: 8px;
             text-align:center;
-            font-size: 24px;
+            font-size: 28px;
             color: var(--muted);
           }}
           .section-title {{
             margin-top: 18px;
             text-align:center;
             font-weight: 800;
-            font-size: 20px;
+            font-size: 22px;
           }}
           .example {{
             margin-top: 10px;
             text-align:center;
           }}
-          .ex-cn {{ font-size: 30px; }}
-          .ex-py {{ margin-top: 6px; font-size: 20px; color: var(--muted); }}
-          .ex-en {{ margin-top: 6px; font-size: 18px; color: var(--muted); }}
+          .ex-cn {{ font-size: 36px; }}
+          .ex-py {{ margin-top: 6px; font-size: 22px; color: var(--muted); }}
+          .ex-en {{ margin-top: 6px; font-size: 20px; color: var(--muted); }}
         </style>
       </head>
       <body>
@@ -148,6 +149,7 @@ def render_flashcard_card(
                 <div class="section-title">Example</div>
                 <div class="example">
                   <div class="row-center" style="gap: 12px;">
+                    {audio_button('ex_audio', example_audio_uri)}
                     <div class="ex-cn">{ex_cn_e}</div>
                   </div>
                   <div class="ex-py">{ex_py_e}</div>

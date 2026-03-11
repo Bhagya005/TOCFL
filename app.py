@@ -21,6 +21,8 @@ from ui.progress_page import render_progress
 from ui.weak_words_page import render_weak_words
 from ui.word_bank_page import render_word_bank
 from ui.tests_page import render_test_page
+from ui.listening_quiz import render_listening_quiz
+from ui.leaderboard import render_leaderboard
 
 
 APP_TITLE = "TOCFL A1 Study Dashboard"
@@ -50,6 +52,8 @@ def main() -> None:
             "Weekly Test",
             "Final Test",
             "Weak Words",
+            "Listening Quiz",
+            "Leaderboard",
             "Word Bank",
             "Progress",
         ],
@@ -132,6 +136,10 @@ def main() -> None:
             )
     elif page == "Weak Words":
         render_weak_words(conn, user)
+    elif page == "Listening Quiz":
+        render_listening_quiz(conn, user, plan)
+    elif page == "Leaderboard":
+        render_leaderboard(conn, user)
     elif page == "Word Bank":
         render_word_bank(conn, user)
     elif page == "Progress":

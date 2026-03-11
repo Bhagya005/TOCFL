@@ -22,7 +22,7 @@ def render_test_page(
     st.title(title)
 
     today = date.today()
-    cache_key = f"test_state::{test_type}"
+    cache_key = f"test_state::{test_type}::user::{user.id}"
 
     cstart, cregen = st.columns([1, 1])
     with cstart:
@@ -101,7 +101,7 @@ def _ensure_test_loaded(
     eligible_words: list[dict],
     seed: int | None,
 ) -> None:
-    cache_key = f"test_state::{test_type}"
+    cache_key = f"test_state::{test_type}::user::{user.id}"
     if cache_key in st.session_state and st.session_state[cache_key].get("questions"):
         return
 
