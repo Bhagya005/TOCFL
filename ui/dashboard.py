@@ -51,5 +51,5 @@ def render_dashboard(conn, user: models.User, plan: StudyPlan, start_date: date)
     if fig is None:
         st.info("No tests taken yet.")
     else:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 

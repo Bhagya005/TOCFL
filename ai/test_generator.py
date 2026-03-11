@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from openai import OpenAI
+from utils.pinyin import numbers_to_tone_marks
 
 
 QuestionType = Literal[
@@ -16,6 +17,8 @@ QuestionType = Literal[
     "sentence_to_meaning",
 ]
 
+SectionType = Literal["meaning", "listening", "writing"]
+
 
 @dataclass(frozen=True)
 class MCQ:
@@ -24,6 +27,231 @@ class MCQ:
     options: list[str]
     answer_index: int
     word_id: int
+
+
+def build_three_section_test(
+    words: list[dict[str, Any]],
+    n_meaning: int,
+    n_listening: int,
+    n_writing: int,
+    seed: int | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Build a test with 3 sections: Meaning/Reading, Listening, Writing (Pinyin).
+    Returns a list of question dicts, each with 'section' and section-specific fields.
+    """
+    rng = random.Random(seed)
+    pool = [w for w in words if w.get("character")]
+    if len(pool) < 4:
+        raise ValueError("Not enough words to generate a test.")
+
+    questions: list[dict[str, Any]] = []
+
+    # 1. Meaning / Reading: Chinese → English, Pinyin → English, Sentence → English
+    meaning_qs = _generate_meaning_section(pool, min(n_meaning, len(pool) * 2), rng)
+    questions.extend(meaning_qs[:n_meaning])
+
+    # 2. Listening: play audio (word or sentence), 4 Chinese options
+    listening_qs = _generate_listening_section(pool, min(n_listening, len(pool)), rng)
+    questions.extend(listening_qs[:n_listening])
+
+    # 3. Writing: show English meaning, user types pinyin (match 漢拼 → 正體字)
+    writing_qs = _generate_writing_section(pool, min(n_writing, len(pool)), rng)
+    questions.extend(writing_qs[:n_writing])
+
+    rng.shuffle(questions)
+    return questions
+
+
+def _generate_meaning_section(
+    pool: list[dict[str, Any]],
+    n: int,
+    rng: random.Random,
+) -> list[dict[str, Any]]:
+    """Meaning/Reading: Chinese → English, Pinyin → English, or Sentence → English."""
+    qtypes: list[Literal["char_to_meaning", "pinyin_to_meaning", "sentence_to_meaning"]] = [
+        "char_to_meaning",
+        "pinyin_to_meaning",
+        "sentence_to_meaning",
+        "sentence_to_meaning",
+    ]
+    selected = rng.sample(pool, k=min(n, len(pool)))
+    out: list[dict[str, Any]] = []
+    for w in selected:
+        qtype = rng.choice(qtypes)
+        q = _build_meaning_question(w, pool, qtype, rng)
+        if q:
+            out.append(q)
+        if len(out) >= n:
+            break
+    return out
+
+
+def _build_meaning_question(
+    w: dict[str, Any],
+    pool: list[dict[str, Any]],
+    qtype: str,
+    rng: random.Random,
+) -> dict[str, Any] | None:
+    wid = int(w["id"])
+    char = str(w.get("character", "")).strip()
+    pinyin = str(w.get("pinyin", "") or "").strip()
+    meaning = str(w.get("meaning", "") or "").strip()
+    sentence = str(w.get("example_sentence", "") or "").strip()
+    translation = str(w.get("example_translation", "") or "").strip()
+
+    if qtype == "char_to_meaning":
+        prompt = f"{char} means?"
+        correct = meaning or "(meaning missing)"
+        distractors = _sample_unique(
+            [str(x.get("meaning", "") or "").strip() for x in pool],
+            exclude={correct, ""},
+            k=3,
+            rng=rng,
+            fallback_prefix="Meaning",
+        )
+    elif qtype == "pinyin_to_meaning":
+        prompt = f"{pinyin or char} means?"
+        correct = meaning or "(meaning missing)"
+        distractors = _sample_unique(
+            [str(x.get("meaning", "") or "").strip() for x in pool],
+            exclude={correct, ""},
+            k=3,
+            rng=rng,
+            fallback_prefix="Meaning",
+        )
+    else:
+        # sentence_to_meaning
+        if not sentence or not translation:
+            prompt = f"{char} means?"
+            correct = meaning or "(meaning missing)"
+            distractors = _sample_unique(
+                [str(x.get("meaning", "") or "").strip() for x in pool],
+                exclude={correct, ""},
+                k=3,
+                rng=rng,
+                fallback_prefix="Meaning",
+            )
+        else:
+            prompt = f"What does this sentence mean?\n\n{sentence}"
+            correct = translation
+            distractors = _sample_unique(
+                [str(x.get("example_translation", "") or "").strip() for x in pool],
+                exclude={correct, ""},
+                k=3,
+                rng=rng,
+                fallback_prefix="Meaning",
+            )
+
+    options = distractors + [correct]
+    rng.shuffle(options)
+    answer_index = options.index(correct)
+    return {
+        "section": "meaning",
+        "prompt": prompt,
+        "options": options,
+        "answer_index": answer_index,
+        "word_id": wid,
+    }
+
+
+def _generate_listening_section(
+    pool: list[dict[str, Any]],
+    n: int,
+    rng: random.Random,
+) -> list[dict[str, Any]]:
+    """Listening: text_to_play (word or example), 4 Chinese options."""
+    selected = rng.sample(pool, k=min(n, len(pool)))
+    out: list[dict[str, Any]] = []
+    for w in selected:
+        q = _build_listening_question(w, pool, rng)
+        if q:
+            out.append(q)
+        if len(out) >= n:
+            break
+    return out
+
+
+def _build_listening_question(
+    w: dict[str, Any],
+    pool: list[dict[str, Any]],
+    rng: random.Random,
+) -> dict[str, Any] | None:
+    wid = int(w["id"])
+    char = str(w.get("character", "")).strip()
+    pinyin_raw = str(w.get("pinyin", "") or "").strip()
+    sentence = str(w.get("example_sentence", "") or "").strip()
+    sentence_pinyin_raw = str(w.get("example_pinyin", "") or "").strip()
+
+    text_to_play = sentence if sentence else char
+
+    # For review: display the exact Chinese text plus its pinyin.
+    if sentence:
+        display_cn = sentence
+        display_py = numbers_to_tone_marks(sentence_pinyin_raw) if sentence_pinyin_raw else ""
+    else:
+        display_cn = char
+        display_py = numbers_to_tone_marks(pinyin_raw) if pinyin_raw else ""
+    correct = char
+    distractors = _sample_unique(
+        [str(x.get("character", "")).strip() for x in pool],
+        exclude={correct, ""},
+        k=3,
+        rng=rng,
+        fallback_prefix="字",
+    )
+    options = distractors + [correct]
+    rng.shuffle(options)
+    answer_index = options.index(correct)
+    return {
+        "section": "listening",
+        "text_to_play": text_to_play,
+        "display_cn": display_cn,
+        "display_py": display_py,
+        "options": options,
+        "answer_index": answer_index,
+        "word_id": wid,
+    }
+
+
+def _generate_writing_section(
+    pool: list[dict[str, Any]],
+    n: int,
+    rng: random.Random,
+) -> list[dict[str, Any]]:
+    """Writing: show English meaning, user types pinyin (tone marks). Match 漢拼 → 正體字."""
+    selected = rng.sample(pool, k=min(n, len(pool)))
+    out: list[dict[str, Any]] = []
+    for w in selected:
+        q = _build_writing_question(w)
+        if q:
+            out.append(q)
+        if len(out) >= n:
+            break
+    return out
+
+
+def _build_writing_question(w: dict[str, Any]) -> dict[str, Any] | None:
+    wid = int(w["id"])
+    meaning = str(w.get("meaning", "") or "").strip()
+    char = str(w.get("character", "")).strip()
+    pinyin_raw = str(w.get("pinyin", "") or "").strip()
+    if not meaning or not char:
+        return None
+    # Use the raw numbered pinyin from the vocab as the canonical answer
+    # (e.g. peng2you3). Writing test grading expects an exact match
+    # modulo case and whitespace.
+    correct_pinyin_numbers = pinyin_raw
+    # For reports, also store a tone-mark display form derived from 漢拼.
+    correct_pinyin_display = numbers_to_tone_marks(pinyin_raw) if pinyin_raw else ""
+    return {
+        "section": "writing",
+        "prompt": meaning,
+        "correct_pinyin_numbers": correct_pinyin_numbers.strip(),
+        "correct_pinyin_display": correct_pinyin_display.strip(),
+        "correct_character": char,
+        "word_id": wid,
+    }
 
 
 def _get_client() -> OpenAI | None:

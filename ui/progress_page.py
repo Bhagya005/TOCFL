@@ -45,7 +45,7 @@ def render_progress(conn, user: models.User, plan: StudyPlan, start_date: date) 
     if fig is None:
         st.info("No test results yet.")
     else:
-        st.plotly_chart(fig, use_container_width=True)
+     st.plotly_chart(fig, width="stretch")
 
     st.subheader("Accuracy by word")
     wrows = conn.execute(
@@ -63,5 +63,5 @@ def render_progress(conn, user: models.User, plan: StudyPlan, start_date: date) 
     if fig2 is None:
         st.info("No flashcard data yet.")
     else:
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 

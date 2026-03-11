@@ -21,8 +21,8 @@ def render_weak_words(conn, user: models.User) -> None:
     st.subheader("Your weak words")
     st.dataframe(
         [{"id": int(r["id"]), "character": r["character"], "pinyin": r["pinyin"], "meaning": r["meaning"], "pos": r["pos"]} for r in weak],
-        use_container_width=True,
         hide_index=True,
+        width="stretch",
     )
 
     st.divider()
@@ -65,15 +65,15 @@ def render_weak_words(conn, user: models.User) -> None:
     with mid:
         b1, b2, b3 = st.columns([1, 1, 1])
         with b1:
-            if st.button("Flip", type="secondary", use_container_width=True):
+            if st.button("Flip", type="secondary", width="stretch"):
                 st.session_state["weak_flipped"] = not flipped
                 st.rerun()
         with b2:
-            if st.button("I knew this", type="primary", use_container_width=True):
+            if st.button("I knew this", type="primary", width="stretch"):
                 models.record_flashcard_result(conn, user.id, word_id, knew=True)
                 _advance(len(weak))
         with b3:
-            if st.button("I didn't know", use_container_width=True):
+            if st.button("I didn't know", width="stretch"):
                 models.record_flashcard_result(conn, user.id, word_id, knew=False)
                 _advance(len(weak))
 
@@ -83,6 +83,6 @@ def _advance(total: int) -> None:
     st.session_state["weak_idx"] = min(total - 1, int(st.session_state.get("weak_idx", 0)) + 1)
     st.rerun()
 
-
     # Card rendering is handled by ui.components.flashcard_card now.
+
 

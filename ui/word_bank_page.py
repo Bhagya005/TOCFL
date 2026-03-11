@@ -70,7 +70,7 @@ def render_word_bank(conn, user: models.User) -> None:
     st.subheader("Vocabulary")
     st.dataframe(
         out.sort_values(["id"]).reset_index(drop=True),
-        use_container_width=True,
         hide_index=True,
+        width="stretch",
     )
 

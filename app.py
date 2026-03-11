@@ -21,7 +21,6 @@ from ui.progress_page import render_progress
 from ui.weak_words_page import render_weak_words
 from ui.word_bank_page import render_word_bank
 from ui.tests_page import render_test_page
-from ui.listening_quiz import render_listening_quiz
 from ui.leaderboard import render_leaderboard
 
 
@@ -52,7 +51,6 @@ def main() -> None:
             "Weekly Test",
             "Final Test",
             "Weak Words",
-            "Listening Quiz",
             "Leaderboard",
             "Word Bank",
             "Progress",
@@ -70,12 +68,10 @@ def main() -> None:
     elif page == "Today's Flashcards":
         render_flashcards(conn, user, plan)
     elif page == "Daily Test":
-        eligible = _words_as_dicts(models.get_words_upto(conn, plan.unlocked_upto_word_id))
-        eligible = _enrich_with_cached_examples(conn, eligible)
-
-        # Ensure today's 15 words have example sentences so we can ask sentence-meaning questions.
         dstart, dend = day_word_range(plan.current_day)
         todays_rows = models.get_words_range(conn, dstart, dend)
+        eligible = _words_as_dicts(todays_rows)
+        eligible = _enrich_with_cached_examples(conn, eligible)
         for r in todays_rows:
             wid = int(r["id"])
             ex = get_or_create_example(
@@ -95,7 +91,7 @@ def main() -> None:
         render_test_page(
             conn,
             user,
-            title="Daily Test (10 questions)",
+            title="Daily Test (40 questions)",
             test_type="daily",
             build_questions=build_daily_test,
             eligible_words=eligible,
@@ -108,11 +104,12 @@ def main() -> None:
         else:
             upto = week_word_upto(plan.current_day)
             eligible = _words_as_dicts(models.get_words_upto(conn, upto))
+            eligible = _enrich_with_cached_examples(conn, eligible)
             seed = _daily_seed(user.id) + 7
             render_test_page(
                 conn,
                 user,
-                title="Weekly Test (30 questions)",
+                title="Weekly Test (120 questions)",
                 test_type="weekly",
                 build_questions=build_weekly_test,
                 eligible_words=eligible,
@@ -124,11 +121,12 @@ def main() -> None:
             st.info("Final test unlocks on Day 20.")
         else:
             eligible = _words_as_dicts(models.get_words_upto(conn, 300))
+            eligible = _enrich_with_cached_examples(conn, eligible)
             seed = _daily_seed(user.id) + 20
             render_test_page(
                 conn,
                 user,
-                title="Final Test (60 questions)",
+                title="Final Test (200 questions)",
                 test_type="final",
                 build_questions=build_final_test,
                 eligible_words=eligible,
@@ -136,8 +134,6 @@ def main() -> None:
             )
     elif page == "Weak Words":
         render_weak_words(conn, user)
-    elif page == "Listening Quiz":
-        render_listening_quiz(conn, user, plan)
     elif page == "Leaderboard":
         render_leaderboard(conn, user)
     elif page == "Word Bank":

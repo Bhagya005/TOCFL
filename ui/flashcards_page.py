@@ -99,16 +99,16 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
     with mid:
         b1, b2, b3 = st.columns([1, 1, 1])
         with b1:
-            if st.button("Flip", type="secondary", use_container_width=True):
+            if st.button("Flip", type="secondary", width="stretch"):
                 st.session_state["flashcard_flipped"] = not flipped
                 st.rerun()
         with b2:
-            if st.button("I knew this", type="primary", use_container_width=True):
+            if st.button("I knew this", type="primary", width="stretch"):
                 update_word_progress(conn, word_id, knew=True)
                 models.record_flashcard_result(conn, user.id, word_id, knew=True)
                 _advance_flashcard(len(words))
         with b3:
-            if st.button("I didn't know", use_container_width=True):
+            if st.button("I didn't know", width="stretch"):
                 update_word_progress(conn, word_id, knew=False)
                 models.record_flashcard_result(conn, user.id, word_id, knew=False)
                 _advance_flashcard(len(words))

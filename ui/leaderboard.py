@@ -56,7 +56,7 @@ def render_leaderboard(conn, user: models.User) -> None:
             }
         )
 
-    st.dataframe(data, use_container_width=True, hide_index=True)
+    st.dataframe(data, hide_index=True, width="stretch")
 
     st.subheader("Points comparison")
 

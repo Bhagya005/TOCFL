@@ -388,6 +388,10 @@ def _compute_words_learned(conn: sqlite3.Connection, user_id: int) -> int:
 
 
 def _compute_test_stats(conn: sqlite3.Connection, user_id: int) -> tuple[int, float]:
+    """
+    Returns (tests_taken, avg_test_accuracy).
+    avg_test_accuracy = average of (correct_answers / total_questions) across all tests (0.0 to 1.0).
+    """
     rows = conn.execute(
         "SELECT score, total FROM test_results WHERE user_id = ?",
         (user_id,),
@@ -395,14 +399,14 @@ def _compute_test_stats(conn: sqlite3.Connection, user_id: int) -> tuple[int, fl
     if not rows:
         return 0, 0.0
     tests_taken = len(rows)
-    percents: list[float] = []
+    accuracies: list[float] = []
     for r in rows:
         total = float(r["total"] or 0)
         score = float(r["score"] or 0)
         if total > 0:
-            percents.append((score / total) * 100.0)
-    avg = sum(percents) / len(percents) if percents else 0.0
-    return tests_taken, avg
+            accuracies.append(score / total)
+    avg_test_accuracy = sum(accuracies) / len(accuracies) if accuracies else 0.0
+    return tests_taken, avg_test_accuracy
 
 
 def _compute_streak_days(conn: sqlite3.Connection, user_id: int) -> int:
@@ -445,12 +449,12 @@ def _update_user_stats(conn: sqlite3.Connection, user_id: int) -> None:
     _ensure_user_stats_row(conn, user_id)
 
     words_learned = _compute_words_learned(conn, user_id)
-    tests_taken, avg_test_score = _compute_test_stats(conn, user_id)
+    tests_taken, avg_test_accuracy = _compute_test_stats(conn, user_id)
     streak_days = _compute_streak_days(conn, user_id)
 
     consistency_score = streak_days * 10
     learning_score = words_learned * 5
-    test_score = avg_test_score * tests_taken
+    test_score = avg_test_accuracy * tests_taken
     total_points = consistency_score + learning_score + test_score
 
     conn.execute(
@@ -467,7 +471,7 @@ def _update_user_stats(conn: sqlite3.Connection, user_id: int) -> None:
             int(streak_days),
             int(words_learned),
             int(tests_taken),
-            float(avg_test_score),
+            float(avg_test_accuracy),
             float(total_points),
             user_id,
         ),
