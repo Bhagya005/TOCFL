@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
+import * as googleTTS from "google-tts-api";
 
 /**
- * TTS audio endpoint. On Vercel, the Python gTTS backend is not available.
- * Options for production:
- * 1. Use a serverless TTS API (e.g. Google Cloud TTS, VoiceRSS) and proxy here.
- * 2. Use client-side SpeechSynthesis in the frontend (see AudioButton fallback).
- * This route returns 501 until a TTS provider is configured.
+ * TTS audio endpoint. Uses Google Translate TTS (same source as gTTS) for natural
+ * Chinese speech. Falls back to 501 if the request fails (client can use browser SpeechSynthesis).
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,7 +13,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ detail: "Missing text" }, { status: 400 });
   }
 
-  // Optional: call an external TTS API if env is set, e.g. NEXT_PUBLIC_TTS_API_URL
+  // Optional: custom TTS proxy if env is set
   const ttsUrl = process.env.TTS_API_URL;
   if (ttsUrl) {
     try {
@@ -30,15 +28,38 @@ export async function GET(request: Request) {
         });
       }
     } catch {
-      // fall through to 501
+      // fall through to Google TTS
     }
   }
 
-  return NextResponse.json(
-    {
-      detail:
-        "Audio not available. Configure TTS_API_URL or use client-side speech synthesis.",
-    },
-    { status: 501 }
-  );
+  // Default: Google Translate TTS (same natural voice as gTTS)
+  try {
+    const trimmed = text.trim();
+    let base64: string;
+    if (trimmed.length <= 200) {
+      base64 = await googleTTS.getAudioBase64(trimmed, {
+        lang: "zh-CN",
+        slow: false,
+        timeout: 10000,
+      });
+    } else {
+      const segments = await googleTTS.getAllAudioBase64(trimmed, {
+        lang: "zh-CN",
+        slow: false,
+        timeout: 10000,
+        splitPunct: "，。、；！？",
+      });
+      base64 = segments[0]?.base64 ?? "";
+      if (!base64) throw new Error("No audio");
+    }
+    const buf = Buffer.from(base64, "base64");
+    return new NextResponse(buf, {
+      headers: { "Content-Type": "audio/mpeg" },
+    });
+  } catch {
+    return NextResponse.json(
+      { detail: "Audio not available; try again or use browser play." },
+      { status: 501 }
+    );
+  }
 }
