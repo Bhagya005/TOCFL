@@ -18,6 +18,9 @@ downloads/
 eggs/
 .eggs/
 lib/
+# Exception: keep frontend src/lib for Next.js @/lib path alias (Vercel build)
+!frontend/src/lib/
+!frontend/src/lib/**
 lib64/
 parts/
 sdist/
@@ -144,6 +147,7 @@ celerybeat.pid
 # Environments
 .env
 .env.example
+.env.local
 .envrc
 .venv
 env/
