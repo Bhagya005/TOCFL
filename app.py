@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import streamlit as st
@@ -61,6 +61,8 @@ def main() -> None:
     st.sidebar.caption(f"Logged in as: **{user.username}**")
     if st.sidebar.button("Log out"):
         st.session_state.pop("user", None)
+        st.session_state["logged_in"] = False
+        st.session_state["last_activity"] = None
         st.rerun()
 
     if page == "Dashboard":
@@ -72,6 +74,13 @@ def main() -> None:
         todays_rows = models.get_words_range(conn, dstart, dend)
         eligible = _words_as_dicts(todays_rows)
         eligible = _enrich_with_cached_examples(conn, eligible)
+        # Boost weak words in the daily test pool.
+        weak_ids = {int(w["id"]) for w in models.list_weak_words(conn, user.id)}
+        boosted = list(eligible)
+        for w in eligible:
+            if int(w["id"]) in weak_ids:
+                boosted.append(w)
+                boosted.append(w)
         for r in todays_rows:
             wid = int(r["id"])
             ex = get_or_create_example(
@@ -82,7 +91,7 @@ def main() -> None:
                 meaning=str(r["meaning"] or ""),
                 pos=str(r["pos"] or ""),
             )
-            for w in eligible:
+            for w in boosted:
                 if int(w["id"]) == wid:
                     w["example_sentence"] = ex.chinese
                     w["example_translation"] = ex.english
@@ -94,7 +103,7 @@ def main() -> None:
             title="Daily Test (40 questions)",
             test_type="daily",
             build_questions=build_daily_test,
-            eligible_words=eligible,
+            eligible_words=boosted,
             seed=seed,
         )
     elif page == "Weekly Test":
@@ -105,6 +114,12 @@ def main() -> None:
             upto = week_word_upto(plan.current_day)
             eligible = _words_as_dicts(models.get_words_upto(conn, upto))
             eligible = _enrich_with_cached_examples(conn, eligible)
+            weak_ids = {int(w["id"]) for w in models.list_weak_words(conn, user.id)}
+            boosted = list(eligible)
+            for w in eligible:
+                if int(w["id"]) in weak_ids:
+                    boosted.append(w)
+                    boosted.append(w)
             seed = _daily_seed(user.id) + 7
             render_test_page(
                 conn,
@@ -112,7 +127,7 @@ def main() -> None:
                 title="Weekly Test (120 questions)",
                 test_type="weekly",
                 build_questions=build_weekly_test,
-                eligible_words=eligible,
+                eligible_words=boosted,
                 seed=seed,
             )
     elif page == "Final Test":
@@ -122,6 +137,12 @@ def main() -> None:
         else:
             eligible = _words_as_dicts(models.get_words_upto(conn, 300))
             eligible = _enrich_with_cached_examples(conn, eligible)
+            weak_ids = {int(w["id"]) for w in models.list_weak_words(conn, user.id)}
+            boosted = list(eligible)
+            for w in eligible:
+                if int(w["id"]) in weak_ids:
+                    boosted.append(w)
+                    boosted.append(w)
             seed = _daily_seed(user.id) + 20
             render_test_page(
                 conn,
@@ -129,7 +150,7 @@ def main() -> None:
                 title="Final Test (200 questions)",
                 test_type="final",
                 build_questions=build_final_test,
-                eligible_words=eligible,
+                eligible_words=boosted,
                 seed=seed,
             )
     elif page == "Weak Words":
@@ -196,11 +217,45 @@ def _ensure_vocab_loaded(conn: sqlite3.Connection) -> None:
 
 
 def _require_login(conn: sqlite3.Connection) -> models.User:
-    if "user" in st.session_state and st.session_state["user"]:
-        return st.session_state["user"]
+    # Inactivity timeout (20 minutes).
+    timeout = timedelta(minutes=20)
+
+    user = st.session_state.get("user")
+    logged_in = bool(st.session_state.get("logged_in", False))
+    last_activity_raw = st.session_state.get("last_activity")
+
+    now = datetime.utcnow()
+
+    # Parse last activity if present.
+    last_activity = None
+    if isinstance(last_activity_raw, str):
+        try:
+            last_activity = datetime.fromisoformat(last_activity_raw)
+        except Exception:
+            last_activity = None
+
+    # If we have a logged-in user, decide based on inactivity timeout.
+    if user and logged_in:
+        # If we don't have a valid last_activity yet, treat this as active now.
+        if last_activity is None:
+            st.session_state["last_activity"] = now.isoformat()
+            return user
+        # Check inactivity window.
+        if now - last_activity <= timeout:
+            st.session_state["last_activity"] = now.isoformat()
+            return user
+        # Session expired due to inactivity.
+        st.session_state.pop("user", None)
+        st.session_state["logged_in"] = False
+        st.session_state["last_activity"] = None
+        st.session_state["session_expired"] = True
 
     st.title("Login")
     st.caption("Create up to 2 users. Each user has separate progress.")
+
+    if st.session_state.get("session_expired"):
+        st.warning("Session expired due to inactivity. Please log in again.")
+        st.session_state["session_expired"] = False
 
     tab1, tab2 = st.tabs(["Log in", "Create user"])
 
@@ -215,6 +270,8 @@ def _require_login(conn: sqlite3.Connection) -> models.User:
                 st.error("Invalid username or password.")
             else:
                 st.session_state["user"] = user
+                st.session_state["logged_in"] = True
+                st.session_state["last_activity"] = datetime.utcnow().isoformat()
                 st.rerun()
 
     with tab2:

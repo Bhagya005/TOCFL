@@ -114,6 +114,18 @@ def init_db(conn: sqlite3.Connection) -> None:
             FOREIGN KEY(word_id) REFERENCES words(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS word_mastery (
+            user_id INTEGER NOT NULL,
+            word_id INTEGER NOT NULL,
+            reading_correct INTEGER NOT NULL DEFAULT 0,
+            listening_correct INTEGER NOT NULL DEFAULT 0,
+            writing_correct INTEGER NOT NULL DEFAULT 0,
+            mastered INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(user_id, word_id),
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY(word_id) REFERENCES words(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS user_stats (
             user_id INTEGER PRIMARY KEY,
             username TEXT NOT NULL,

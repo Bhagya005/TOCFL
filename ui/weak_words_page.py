@@ -44,6 +44,17 @@ def render_weak_words(conn, user: models.User) -> None:
 
     st.caption(f"Card {idx + 1} / {len(weak)}")
 
+    mastery = models.get_word_mastery(conn, user.id, word_id)
+    reading_mark = "✓" if mastery["reading_correct"] else "✗"
+    listening_mark = "✓" if mastery["listening_correct"] else "✗"
+    writing_mark = "✓" if mastery["writing_correct"] else "✗"
+    status = "Mastered" if mastery["mastered"] else "Learning"
+
+    st.caption(
+        f"Reading {reading_mark} · Listening {listening_mark} · Writing {writing_mark}  \n"
+        f"Status: {status}"
+    )
+
     ex = get_or_create_example(conn, word_id=word_id, word=char, pinyin=pinyin, meaning=meaning)
     flipped = bool(st.session_state.get("weak_flipped", False))
 

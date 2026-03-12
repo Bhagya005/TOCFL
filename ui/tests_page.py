@@ -57,6 +57,22 @@ def render_test_page(
     idx = int(state.get("idx", 0))
     answers: dict[int, Any] = state.get("answers", {})
 
+    # Persist current in-progress state so the test can be resumed later.
+    models.save_cached_generated_test(
+        conn,
+        user.id,
+        today,
+        test_type,
+        {
+            "questions": questions,
+            "state": {
+                "idx": idx,
+                "answers": answers,
+                "started": bool(state.get("started", False)),
+            },
+        },
+    )
+
     if idx >= len(questions):
         _render_test_finish(conn, user, today, test_type, questions, answers, cache_key)
         return
@@ -205,10 +221,17 @@ def _ensure_test_loaded(
     cached = models.get_cached_generated_test(conn, user.id, day, test_type)
     if cached and cached.get("questions"):
         questions = cached["questions"]
-    else:
-        questions = build_questions(eligible_words, seed)
-        models.save_cached_generated_test(conn, user.id, day, test_type, {"questions": questions})
+        saved_state = cached.get("state") or {}
+        st.session_state[cache_key] = {
+            "questions": questions,
+            "idx": int(saved_state.get("idx", 0)),
+            "answers": saved_state.get("answers", {}),
+            "started": bool(saved_state.get("started", False)),
+        }
+        return
 
+    questions = build_questions(eligible_words, seed)
+    models.save_cached_generated_test(conn, user.id, day, test_type, {"questions": questions})
     st.session_state[cache_key] = {"questions": questions, "idx": 0, "answers": {}, "started": False}
 
 
@@ -239,14 +262,17 @@ def _render_test_finish(
     for i, q in enumerate(questions):
         section = q.get("section", "meaning")
         user_ans = answers.get(i)
+        is_correct = False
 
         if section == "meaning":
             meaning_total += 1
-            if isinstance(user_ans, int) and int(user_ans) == int(q.get("answer_index", -1)):
+            is_correct = isinstance(user_ans, int) and int(user_ans) == int(q.get("answer_index", -1))
+            if is_correct:
                 meaning_correct += 1
         elif section == "listening":
             listening_total += 1
-            if isinstance(user_ans, int) and int(user_ans) == int(q.get("answer_index", -1)):
+            is_correct = isinstance(user_ans, int) and int(user_ans) == int(q.get("answer_index", -1))
+            if is_correct:
                 listening_correct += 1
         else:
             writing_total += 1
@@ -254,8 +280,16 @@ def _render_test_finish(
             if correct_pinyin_numbers and isinstance(user_ans, str):
                 user_raw = user_ans.strip().lower().replace(" ", "")
                 correct_raw = correct_pinyin_numbers.strip().lower().replace(" ", "")
-                if user_raw and correct_raw and user_raw == correct_raw:
+                is_correct = bool(user_raw and correct_raw and user_raw == correct_raw)
+                if is_correct:
                     writing_correct += 1
+
+        # Weak word reinforcement + mastery tracking per question
+        word_id = int(q.get("word_id", 0) or 0)
+        if word_id:
+            if not is_correct:
+                models.add_weak_word(conn, user.id, word_id)
+            models.update_word_mastery_from_test(conn, user.id, word_id, section, is_correct)
 
     total_correct = meaning_correct + listening_correct + writing_correct
     accuracy_percent = (100.0 * total_correct / total) if total else 0.0

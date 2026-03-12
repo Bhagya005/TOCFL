@@ -62,6 +62,7 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
     if "flashcard_index" not in st.session_state or st.button("Reset session"):
         st.session_state["flashcard_index"] = 0
         st.session_state["flashcard_flipped"] = False
+        st.session_state["flashcards_completed_once"] = False
 
     idx = int(st.session_state.get("flashcard_index", 0))
     idx = max(0, min(idx, len(words) - 1))
@@ -74,6 +75,17 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
     meaning = str(w["meaning"] or "")
 
     st.subheader(f"Card {idx + 1} / {len(words)}")
+
+    mastery = models.get_word_mastery(conn, user.id, word_id)
+    reading_mark = "✓" if mastery["reading_correct"] else "✗"
+    listening_mark = "✓" if mastery["listening_correct"] else "✗"
+    writing_mark = "✓" if mastery["writing_correct"] else "✗"
+    status = "Mastered" if mastery["mastered"] else "Learning"
+
+    st.caption(
+        f"Reading {reading_mark} · Listening {listening_mark} · Writing {writing_mark}  \n"
+        f"Status: {status}"
+    )
 
     flipped = bool(st.session_state.get("flashcard_flipped", False))
     pos = str(w["pos"] or "")
@@ -113,9 +125,21 @@ def render_flashcards(conn, user: models.User, plan: StudyPlan) -> None:
                 models.record_flashcard_result(conn, user.id, word_id, knew=False)
                 _advance_flashcard(len(words))
 
+    if st.session_state.get("flashcards_completed_once") or idx == len(words) - 1:
+        if st.button("Review Today's Words Again"):
+            st.session_state["flashcard_index"] = 0
+            st.session_state["flashcard_flipped"] = False
+            st.session_state["flashcards_completed_once"] = False
+            st.rerun()
+
 
 def _advance_flashcard(total: int) -> None:
+    cur = int(st.session_state.get("flashcard_index", 0))
+    if cur >= total - 1:
+        st.session_state["flashcards_completed_once"] = True
+        st.session_state["flashcard_index"] = total - 1
+    else:
+        st.session_state["flashcard_index"] = cur + 1
     st.session_state["flashcard_flipped"] = False
-    st.session_state["flashcard_index"] = min(total - 1, int(st.session_state.get("flashcard_index", 0)) + 1)
     st.rerun()
 
