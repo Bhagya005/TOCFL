@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-100 antialiased overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card bg-slate-800/80 border border-slate-700/50 shadow-card;
+  }
+  /* Touch-friendly: min 44px height on mobile */
+  .btn-primary {
+    @apply px-5 py-3 min-h-[48px] md:min-h-0 rounded-button font-medium bg-amber-500 text-slate-900 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center;
+  }
+  .btn-secondary {
+    @apply px-5 py-3 min-h-[48px] md:min-h-0 rounded-button font-medium bg-slate-600 text-slate-100 hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 min-h-[48px] md:min-h-0 rounded-button bg-slate-700/80 border border-slate-600 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-colors;
+  }
+}
+
+/* Smooth flip for flashcards */
+.flip-root {
+  perspective: 1000px;
+}
+.flip-inner {
+  position: relative;
+  min-height: 280px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+@media (min-width: 768px) {
+  .flip-inner {
+    min-height: 320px;
+  }
+}
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-front,
+.flip-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
