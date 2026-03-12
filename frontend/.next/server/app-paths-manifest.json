@@ -1,9 +1,9 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/(main)/weak-words/page": "app/(main)/weak-words/page.js",
-  "/(main)/tests/page": "app/(main)/tests/page.js",
-  "/(main)/tests/[testType]/page": "app/(main)/tests/[testType]/page.js",
   "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
   "/(main)/flashcards/page": "app/(main)/flashcards/page.js",
-  "/(main)/progress/page": "app/(main)/progress/page.js"
+  "/(main)/progress/page": "app/(main)/progress/page.js",
+  "/(main)/word-bank/page": "app/(main)/word-bank/page.js",
+  "/(main)/tests/[testType]/page": "app/(main)/tests/[testType]/page.js",
+  "/(main)/tests/page": "app/(main)/tests/page.js",
+  "/(main)/leaderboard/page": "app/(main)/leaderboard/page.js"
 }

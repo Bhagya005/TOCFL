@@ -77,8 +77,8 @@ export default function TestsPage() {
             <div key={type} className="card p-4 md:p-6 flex flex-col min-w-0">
               <span className="text-3xl mb-3" aria-hidden>{icon}</span>
               <h2 className="text-lg font-semibold text-slate-100 mb-2">{title}</h2>
-              <p className="text-sm text-slate-400 mb-4 flex-1">{description}</p>
-              <p className="text-xs text-slate-500 mb-4">{questions} questions</p>
+              <p className="text-base font-medium text-slate-400 mb-4 flex-1">{description}</p>
+              <p className="text-sm font-medium text-slate-500 mb-4">{questions} questions</p>
               {e.can_start ? (
                 <Link href={href} className="btn-primary text-center">
                   Start

@@ -36,7 +36,7 @@ export default function Sidebar({ username }: { username: string }) {
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700/50 px-3">
           {(!collapsed || mobileOpen) && (
-            <span className="truncate text-sm font-semibold text-slate-100">
+            <span className="truncate text-base font-semibold text-slate-100">
               TOCFL A1
             </span>
           )}
@@ -63,7 +63,7 @@ export default function Sidebar({ username }: { username: string }) {
                     href={href}
                     onClick={closeMobile}
                     className={`
-                      flex items-center gap-3 rounded-button px-3 py-3 text-sm font-medium transition-colors min-h-[44px]
+                      flex items-center gap-3 rounded-button px-3 py-3 text-base font-medium transition-colors min-h-[44px]
                       ${isActive
                         ? "bg-amber-500/20 text-amber-400"
                         : "text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
@@ -87,7 +87,7 @@ export default function Sidebar({ username }: { username: string }) {
       `}
         >
           {(!collapsed || mobileOpen) && (
-            <p className="truncate text-xs text-slate-500">
+            <p className="truncate text-sm font-medium text-slate-500">
               Logged in as <strong className="text-slate-400">{username}</strong>
             </p>
           )}
@@ -98,7 +98,7 @@ export default function Sidebar({ username }: { username: string }) {
               window.location.href = "/login";
             }}
             className={`
-            text-sm text-slate-400 hover:text-slate-100 min-h-[44px] min-w-[44px] md:min-w-0 md:min-h-0
+            text-base font-medium text-slate-400 hover:text-slate-100 min-h-[44px] min-w-[44px] md:min-w-0 md:min-h-0
             ${collapsed && !mobileOpen ? "rounded-button p-2 hover:bg-slate-700/50 flex items-center justify-center" : "w-full text-left py-2"}
           `}
           >

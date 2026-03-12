@@ -72,7 +72,7 @@ export default function WordBankPage() {
           className="input-field mb-4"
         />
         <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
             <input
               type="checkbox"
               checked={showLearned}
@@ -81,7 +81,7 @@ export default function WordBankPage() {
             />
             Learned
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
             <input
               type="checkbox"
               checked={showUnlearned}
@@ -90,7 +90,7 @@ export default function WordBankPage() {
             />
             Unlearned
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
             <input
               type="checkbox"
               checked={weakOnly}
@@ -103,10 +103,10 @@ export default function WordBankPage() {
       </div>
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead>
               <tr className="border-b border-slate-600 bg-slate-800/50 text-left">
-                <th className="py-4 px-4 font-semibold text-slate-300">ID</th>
+                <th className="py-4 px-4 font-semibold text-slate-300 text-base">ID</th>
                 <th className="py-4 px-4 font-semibold text-slate-300">Character</th>
                 <th className="py-4 px-4 font-semibold text-slate-300">Pinyin</th>
                 <th className="py-4 px-4 font-semibold text-slate-300">Meaning</th>

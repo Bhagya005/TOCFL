@@ -32,9 +32,9 @@ export default function FlashcardCard({
   return (
     <div className="flip-root w-full max-w-2xl mx-auto px-0 sm:px-2">
       <div className={`flip-inner ${flipped ? "flipped" : ""}`}>
-        {/* Front */}
+        {/* Front — Chinese character as clear focal point */}
         <div className="flip-front card min-h-[280px] md:min-h-[320px] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
-          <p className="text-5xl sm:text-6xl md:text-7xl font-bold text-center text-slate-100 break-all">
+          <p className="text-6xl sm:text-7xl md:text-8xl font-bold text-center text-slate-100 break-all leading-tight">
             {word.character}
           </p>
         </div>
@@ -46,27 +46,28 @@ export default function FlashcardCard({
               {word.character}
             </p>
           </div>
-          <p className="text-base sm:text-lg md:text-xl text-slate-400 mb-2 text-center break-words max-w-full">
+          <p className="text-lg sm:text-xl md:text-2xl font-medium text-slate-300 mb-2 text-center break-words max-w-full">
             {word.pinyin} · {word.meaning}
           </p>
           {word.example_sentence && (
-            <div className="mt-3 md:mt-4 text-center w-full max-w-full">
-              <p className="text-base sm:text-lg text-slate-300 break-words px-1">
-                {word.example_sentence}
-              </p>
+            <div className="mt-4 md:mt-5 w-full max-w-full text-center">
+              {/* ▶ Chinese sentence — play button inline first */}
+              <div className="flex flex-wrap items-center justify-center gap-2 gap-y-1">
+                <AudioButton text={word.example_sentence} className="h-10 w-10 shrink-0" />
+                <p className="text-xl sm:text-2xl font-semibold text-slate-200 break-words">
+                  {word.example_sentence}
+                </p>
+              </div>
               {word.example_pinyin && (
-                <p className="text-sm sm:text-base text-slate-400 mt-1 break-words px-1">
+                <p className="text-lg sm:text-xl font-semibold text-slate-400 mt-3 break-words px-1">
                   {word.example_pinyin}
                 </p>
               )}
               {word.example_translation && (
-                <p className="text-xs sm:text-sm text-slate-500 mt-1 break-words px-1">
+                <p className="text-base sm:text-lg font-semibold text-slate-500 mt-2 break-words px-1">
                   {word.example_translation}
                 </p>
               )}
-              <div className="mt-2">
-                <AudioButton text={word.example_sentence} />
-              </div>
             </div>
           )}
         </div>
@@ -88,7 +89,7 @@ export default function FlashcardCard({
           <button
             type="button"
             onClick={onReset}
-            className="text-sm text-slate-500 hover:text-slate-300 min-h-[44px] px-4 py-2"
+            className="text-base font-medium text-slate-500 hover:text-slate-300 min-h-[44px] px-4 py-2"
           >
             Reset session
           </button>

@@ -46,7 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-6 shadow-xl">
         <h1 className="text-2xl font-bold text-center mb-6">TOCFL A1 Study</h1>
-        <p className="text-gray-400 text-sm text-center mb-6">Create up to 2 users. Each has separate progress.</p>
+        <p className="text-gray-400 text-base font-medium text-center mb-6">Create up to 2 users. Each has separate progress.</p>
         <div className="flex gap-2 mb-6">
           <button
             type="button"
@@ -63,8 +63,8 @@ export default function LoginPage() {
             Create user
           </button>
         </div>
-        {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
-        {message && <p className="text-green-400 text-sm mb-4">{message}</p>}
+        {error && <p className="text-red-400 text-base font-medium mb-4">{error}</p>}
+        {message && <p className="text-green-400 text-base font-medium mb-4">{message}</p>}
         {tab === "login" ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <input

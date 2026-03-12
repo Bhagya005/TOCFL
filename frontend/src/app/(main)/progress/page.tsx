@@ -69,7 +69,7 @@ export default function ProgressPage() {
           )}
         </div>
         <div className="card p-4">
-          <p className="text-sm text-slate-400 mb-2">Overall progress</p>
+          <p className="text-base font-medium text-slate-400 mb-2">Overall progress</p>
           <div className="h-3 rounded-full bg-slate-700 overflow-hidden">
             <div
               className="h-full bg-amber-500 rounded-full transition-all"
@@ -90,7 +90,7 @@ export default function ProgressPage() {
         ) : (
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
                   <tr className="border-b border-slate-600 bg-slate-800/50 text-left">
                     <th className="py-4 px-4 font-semibold text-slate-300">Date</th>
@@ -124,7 +124,7 @@ export default function ProgressPage() {
         ) : (
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
                   <tr className="border-b border-slate-600 bg-slate-800/50 text-left">
                     <th className="py-4 px-4 font-semibold text-slate-300">Word</th>

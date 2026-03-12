@@ -58,9 +58,22 @@ JWT_SECRET = os.getenv("JWT_SECRET", "tocfl-dev-secret-change-in-production")
 JWT_ALGORITHM = "HS256"
 
 app = FastAPI(title="TOCFL A1 API")
+
+# Allow frontend from localhost and local network (e.g. http://192.168.8.9:3000)
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://0.0.0.0:3000",
+]
+# Optional: allow any origin matching local IP on port 3000 (for same-machine access via IP)
+_app_origins = os.getenv("CORS_ORIGINS", "").strip()
+if _app_origins:
+    CORS_ORIGINS.extend(o.strip() for o in _app_origins.split(",") if o.strip())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):3000",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -21,7 +21,7 @@ export default function QuizCard({
     <div className="max-w-2xl mx-auto w-full min-w-0">
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2 break-words">{title}</h1>
-        <p className="text-slate-400 text-sm mb-3">{questionProgress}</p>
+        <p className="text-slate-400 text-base font-medium mb-3">{questionProgress}</p>
         <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
           <div
             className="h-full bg-amber-500 rounded-full transition-all duration-300"

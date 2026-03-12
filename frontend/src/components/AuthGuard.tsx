@@ -80,7 +80,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <span className="text-sm font-semibold text-slate-200 truncate">TOCFL A1</span>
+        <span className="text-base font-semibold text-slate-200 truncate">TOCFL A1</span>
       </header>
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 max-w-6xl mx-auto w-full min-w-0">{children}</div>
     </main>

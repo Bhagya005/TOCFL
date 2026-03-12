@@ -49,10 +49,10 @@ export default function WeakWordsPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-slate-100">Weak Words</h1>
-      <p className="text-slate-400">Words you&apos;ve missed 3+ times. Review them in flashcards.</p>
+      <p className="text-slate-400 text-base font-medium">Words you&apos;ve missed 3+ times. Review them in flashcards.</p>
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead>
               <tr className="border-b border-slate-600 bg-slate-800/50 text-left">
                 <th className="py-4 px-4 font-semibold text-slate-300">ID</th>

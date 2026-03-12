@@ -9,7 +9,7 @@ export default function ProgressBar({ current, total, label }: ProgressBarProps)
   return (
     <div className="w-full">
       {label != null && (
-        <p className="text-sm text-slate-400 mb-2">{label}</p>
+        <p className="text-base font-medium text-slate-400 mb-2">{label}</p>
       )}
       <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
         <div

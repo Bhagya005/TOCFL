@@ -143,18 +143,18 @@ export default function TestRunPage() {
           <p className="text-xl text-slate-200">
             Total: <strong>{result.total_correct}</strong> / {result.total} ({result.accuracy_percent.toFixed(0)}%)
           </p>
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-400 text-base font-medium">
             Meaning: {result.meaning_score}/{result.meaning_total} · Listening: {result.listening_score}/{result.listening_total} · Writing: {result.writing_score}/{result.writing_total}
           </p>
           {result.already_completed && (
-            <p className="text-amber-500 text-sm">A result for today was already saved. This attempt was not stored again.</p>
+            <p className="text-amber-500 text-base font-medium">A result for today was already saved. This attempt was not stored again.</p>
           )}
         </div>
         <section>
           <h2 className="text-lg font-semibold text-slate-200 mb-4">Test Review</h2>
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
                   <tr className="border-b border-slate-600 bg-slate-800/50 text-left">
                     <th className="py-3 px-4 font-semibold text-slate-300">Q#</th>
@@ -218,7 +218,7 @@ export default function TestRunPage() {
       {q.section === "listening" && (
         <>
           {q.text_to_play && <AudioPlayer text={q.text_to_play} />}
-          <p className="text-sm text-slate-500 mt-2 mb-4">Choose the word you heard:</p>
+          <p className="text-base font-medium text-slate-500 mt-2 mb-4">Choose the word you heard:</p>
           <div className="space-y-3">
             {(q.options || []).map((opt, i) => (
               <label
@@ -241,7 +241,7 @@ export default function TestRunPage() {
       {q.section === "writing" && (
         <>
           <p className="text-lg text-slate-200 mb-2">English: {q.prompt}</p>
-          <p className="text-sm text-slate-500 mb-3">Type the pinyin with tone numbers (e.g. peng2you3)</p>
+          <p className="text-base font-medium text-slate-500 mb-3">Type the pinyin with tone numbers (e.g. peng2you3)</p>
           <input
             type="text"
             value={(answers[index] as string) || ""}
@@ -257,7 +257,7 @@ export default function TestRunPage() {
   return (
     <>
       <div className="flex items-center justify-end mb-4">
-        <Link href="/tests" className="text-amber-400 hover:underline text-sm">← Back to Tests</Link>
+        <Link href="/tests" className="text-amber-400 hover:underline text-base font-medium">← Back to Tests</Link>
       </div>
       <QuizCard
         title={TITLES[testType]}
