@@ -18,18 +18,23 @@ type Question = {
   display_py?: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+function getOrigin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+}
 
 function AudioPlayer({ text }: { text: string }) {
   const [src, setSrc] = useState<string | null>(null);
   const ref = useRef<string | null>(null);
   useEffect(() => {
     if (!text) return;
+    const origin = getOrigin();
     const token = typeof window !== "undefined" ? localStorage.getItem("tocfl_token") : null;
-    fetch(`${API_URL}/api/audio?text=${encodeURIComponent(text)}`, {
+    const url = origin ? `${origin}/api/audio?text=${encodeURIComponent(text)}` : `/api/audio?text=${encodeURIComponent(text)}`;
+    fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then((r) => r.blob())
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("Audio not available"))))
       .then((blob) => {
         const u = URL.createObjectURL(blob);
         ref.current = u;

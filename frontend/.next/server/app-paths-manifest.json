@@ -1,9 +1,9 @@
 {
-  "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
+  "/api/me/route": "app/api/me/route.js",
+  "/api/leaderboard/route": "app/api/leaderboard/route.js",
+  "/api/flashcards/today/route": "app/api/flashcards/today/route.js",
+  "/api/word-bank/route": "app/api/word-bank/route.js",
   "/(main)/flashcards/page": "app/(main)/flashcards/page.js",
-  "/(main)/progress/page": "app/(main)/progress/page.js",
-  "/(main)/word-bank/page": "app/(main)/word-bank/page.js",
-  "/(main)/tests/[testType]/page": "app/(main)/tests/[testType]/page.js",
-  "/(main)/tests/page": "app/(main)/tests/page.js",
-  "/(main)/leaderboard/page": "app/(main)/leaderboard/page.js"
+  "/(main)/leaderboard/page": "app/(main)/leaderboard/page.js",
+  "/(main)/word-bank/page": "app/(main)/word-bank/page.js"
 }

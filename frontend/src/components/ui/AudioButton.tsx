@@ -2,7 +2,10 @@
 
 import { useCallback, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+function getOrigin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+}
 
 export default function AudioButton({ text, className = "" }: { text: string; className?: string }) {
   const [playing, setPlaying] = useState(false);
@@ -10,11 +13,16 @@ export default function AudioButton({ text, className = "" }: { text: string; cl
   const play = useCallback(() => {
     if (!text || playing) return;
     setPlaying(true);
+    const origin = getOrigin();
     const token = typeof window !== "undefined" ? localStorage.getItem("tocfl_token") : null;
-    fetch(`${API_URL}/api/audio?text=${encodeURIComponent(text)}`, {
+    const url = origin ? `${origin}/api/audio?text=${encodeURIComponent(text)}` : `/api/audio?text=${encodeURIComponent(text)}`;
+    fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then((r) => r.blob())
+      .then((r) => {
+        if (!r.ok) throw new Error("Audio not available");
+        return r.blob();
+      })
       .then((blob) => {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
