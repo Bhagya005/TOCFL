@@ -51,6 +51,17 @@ npm run dev
 
 Open **http://localhost:3000**. Log in or create a user (up to 2 users). Use Dashboard, Flashcards, Tests, Leaderboard, Progress, Weak Words, and Word Bank.
 
+## Deploy frontend to Vercel
+
+The Next.js app lives in the `frontend/` directory. So that Vercel finds it:
+
+1. In the [Vercel dashboard](https://vercel.com/dashboard), open your project (**TOCFL**).
+2. Go to **Settings → General**.
+3. Under **Root Directory**, click **Edit**, set it to **`frontend`**, and save.
+4. Redeploy. Vercel will run `npm install` and `next build` from `frontend/`, so Next.js will be detected.
+
+Set **Environment Variables** (e.g. `NEXT_PUBLIC_API_URL` to your backend API URL) if your backend is hosted elsewhere.
+
 ## Routes (Next.js)
 
 | Path | Description |
