@@ -200,7 +200,7 @@ export default function DashboardPage() {
         <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Today&apos;s tasks</h2>
         <ul className="card p-4 md:p-6 list-disc list-inside text-slate-300 space-y-2">
           <li>Flashcards: Day {plan.current_day} (words up to {plan.unlocked_upto_word_id})</li>
-          <li>Daily test: 40 questions</li>
+          <li>Daily test: 35 questions</li>
         </ul>
       </section>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { normalizePinyinForComparison } from "@/lib/pinyin";
 import { supabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
@@ -101,9 +102,13 @@ export async function POST(request: Request) {
         typeof userAns === "string" && String(userAns).trim()
           ? String(userAns).trim()
           : "(no answer)";
-      const userRaw = userText.toLowerCase().replace(/\s/g, "");
-      const correctRaw = correctPinyinNumbers.toLowerCase().replace(/\s/g, "");
-      const isCorrect = Boolean(userRaw && correctRaw && userRaw === correctRaw);
+      const normalizedUser = normalizePinyinForComparison(userText);
+      const normalizedCorrect = normalizePinyinForComparison(correctPinyinNumbers);
+      const isCorrect = Boolean(
+        normalizedUser &&
+        normalizedCorrect &&
+        normalizedUser === normalizedCorrect
+      );
       if (isCorrect) writingCorrect++;
       reviewRows.push({
         "Q#": String(i + 1),

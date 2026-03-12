@@ -82,7 +82,7 @@ function AudioPlayer({ text }: { text: string }) {
 }
 
 const TITLES: Record<string, string> = {
-  daily: "Daily Test (40 questions)",
+  daily: "Daily Test (35 questions)",
   weekly: "Weekly Test (120 questions)",
   final: "Final Test (200 questions)",
 };

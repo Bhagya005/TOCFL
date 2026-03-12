@@ -150,7 +150,7 @@ export function buildThreeSectionTest(
   return shuffle(questions, rng);
 }
 
-const DAILY = { meaning: 20, listening: 10, writing: 10 };
+const DAILY = { meaning: 15, listening: 10, writing: 10 };
 const WEEKLY = { meaning: 60, listening: 30, writing: 30 };
 const FINAL = { meaning: 100, listening: 50, writing: 50 };
 

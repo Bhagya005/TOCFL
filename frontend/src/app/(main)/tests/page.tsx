@@ -13,7 +13,7 @@ const TESTS = [
     type: "daily",
     href: "/tests/daily",
     title: "Daily Test",
-    questions: 40,
+    questions: 35,
     description: "Words learned today.",
     icon: "📅",
   },
