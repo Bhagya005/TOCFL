@@ -25,9 +25,14 @@ function getOrigin(): string {
 
 function AudioPlayer({ text }: { text: string }) {
   const [src, setSrc] = useState<string | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const ref = useRef<string | null>(null);
+
   useEffect(() => {
     if (!text) return;
+    setSrc(null);
+    setUseFallback(false);
     const origin = getOrigin();
     const token = typeof window !== "undefined" ? localStorage.getItem("tocfl_token") : null;
     const url = origin ? `${origin}/api/audio?text=${encodeURIComponent(text)}` : `/api/audio?text=${encodeURIComponent(text)}`;
@@ -40,7 +45,7 @@ function AudioPlayer({ text }: { text: string }) {
         ref.current = u;
         setSrc(u);
       })
-      .catch(() => {});
+      .catch(() => setUseFallback(true));
     return () => {
       if (ref.current) {
         URL.revokeObjectURL(ref.current);
@@ -48,8 +53,32 @@ function AudioPlayer({ text }: { text: string }) {
       }
     };
   }, [text]);
-  if (!src) return <span className="text-slate-500 text-sm">(Loading audio…)</span>;
-  return <audio src={src} controls className="w-full max-w-md rounded-button" />;
+
+  const playFallback = useCallback(() => {
+    if (!text || playing) return;
+    setPlaying(true);
+    import("@/lib/speech").then(({ playWithSpeechSynthesis }) =>
+      playWithSpeechSynthesis(text).finally(() => setPlaying(false))
+    ).catch(() => setPlaying(false));
+  }, [text, playing]);
+
+  if (src) return <audio src={src} controls className="w-full max-w-md rounded-button" />;
+  if (useFallback) {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={playFallback}
+          disabled={playing}
+          className="inline-flex h-10 items-center justify-center rounded-button border border-slate-600 bg-slate-700/50 px-4 text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+        >
+          {playing ? "Playing…" : "Play (browser)"}
+        </button>
+        <span className="text-slate-500 text-sm">Server audio unavailable; using browser speech.</span>
+      </div>
+    );
+  }
+  return <span className="text-slate-500 text-sm">(Loading audio…)</span>;
 }
 
 const TITLES: Record<string, string> = {

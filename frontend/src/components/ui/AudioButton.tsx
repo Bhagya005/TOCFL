@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { playWithSpeechSynthesis } from "@/lib/speech";
 
 function getOrigin(): string {
   if (typeof window !== "undefined") return window.location.origin;
@@ -24,19 +25,23 @@ export default function AudioButton({ text, className = "" }: { text: string; cl
         return r.blob();
       })
       .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
+        const blobUrl = URL.createObjectURL(blob);
+        const audio = new Audio(blobUrl);
         audio.onended = () => {
-          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(blobUrl);
           setPlaying(false);
         };
         audio.onerror = () => {
-          URL.revokeObjectURL(url);
+          URL.revokeObjectURL(blobUrl);
           setPlaying(false);
         };
         audio.play().catch(() => setPlaying(false));
       })
-      .catch(() => setPlaying(false));
+      .catch(() => {
+        playWithSpeechSynthesis(text)
+          .then(() => setPlaying(false))
+          .catch(() => setPlaying(false));
+      });
   }, [text, playing]);
 
   return (

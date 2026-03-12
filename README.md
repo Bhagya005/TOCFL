@@ -2,7 +2,9 @@
 
 Local multi-user app for studying the first 300 TOCFL A1 vocabulary words from `CCCC_Vocabulary_2022.xlsx`, with flashcards, AI example sentences, tests, and progress tracking.
 
-**Architecture:** Python FastAPI backend (learning logic, DB, tests, flashcards) + Next.js frontend (UI).
+**Architecture (Vercel deploy):** Next.js frontend + API routes (serverless) + Supabase (PostgreSQL). No separate backend; all APIs live under `/api` and use Supabase for persistence.
+
+**Legacy (local):** Python FastAPI backend + SQLite + Next.js frontend (see Setup below).
 
 ## Setup
 
@@ -51,16 +53,23 @@ npm run dev
 
 Open **http://localhost:3000**. Log in or create a user (up to 2 users). Use Dashboard, Flashcards, Tests, Leaderboard, Progress, Weak Words, and Word Bank.
 
-## Deploy frontend to Vercel
+## Deploy full stack on Vercel (Supabase)
 
-The Next.js app lives in the `frontend/` directory. So that Vercel finds it:
+1. **Supabase:** Create a project at [supabase.com](https://supabase.com). In the SQL Editor, run the migration in `frontend/supabase/migrations/001_initial.sql`.
+2. **Seed words:** From the project root, with `CCCC_Vocabulary_2022.xlsx` in place and Supabase env vars set (e.g. from `frontend/.env.local` or exported), run:
+   ```bash
+   python scripts/seed_supabase_words.py
+   ```
+   This fills the `words` table (and optionally `examples`) with the first 300 TOCFL words. Without this, the flashcard and word-bank pages will be empty.
+3. **Vercel:** Set **Root Directory** to `frontend`. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL` – Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `SUPABASE_SERVICE_ROLE_KEY` – API key (service role recommended for API routes)
+   - `JWT_SECRET` – secret for auth tokens
+4. Deploy. The app uses same-origin `/api` routes; no separate backend URL.
 
-1. In the [Vercel dashboard](https://vercel.com/dashboard), open your project (**TOCFL**).
-2. Go to **Settings → General**.
-3. Under **Root Directory**, click **Edit**, set it to **`frontend`**, and save.
-4. Redeploy. Vercel will run `npm install` and `next build` from `frontend/`, so Next.js will be detected.
+**Build without Supabase:** For a local build (e.g. CI) without real credentials, set placeholders: `NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co` and `SUPABASE_ANON_KEY=placeholder`.
 
-Set **Environment Variables** (e.g. `NEXT_PUBLIC_API_URL` to your backend API URL) if your backend is hosted elsewhere.
+**Audio:** `/api/audio` returns 501 unless you set `TTS_API_URL` to a TTS service. The UI can fall back to browser speech synthesis.
 
 ## Routes (Next.js)
 
@@ -77,7 +86,7 @@ Set **Environment Variables** (e.g. `NEXT_PUBLIC_API_URL` to your backend API UR
 | `/weak-words` | Weak words |
 | `/word-bank` | Full word bank with filters |
 
-## API (FastAPI)
+## API (Next.js + Supabase)
 
 - `POST /api/auth/login`, `POST /api/auth/register` – auth
 - `GET /api/me` – current user (Bearer token)
@@ -87,12 +96,11 @@ Set **Environment Variables** (e.g. `NEXT_PUBLIC_API_URL` to your backend API UR
 - `GET /api/tests/eligible?test_type=daily|weekly|final`
 - `POST /api/tests/start` – get questions (body: test_type)
 - `POST /api/tests/submit` – submit answers (body: test_type, answers)
-- `GET /api/audio?text=...` – TTS audio (Bearer token)
+- `GET /api/audio?text=...` – TTS audio (optional; set TTS_API_URL or use client fallback)
 - `GET /api/leaderboard`, `GET /api/progress`, `GET /api/weak-words`, `GET /api/word-bank`
 
 ## Data & caching
 
-- SQLite DB: `cache/app.db`
-- Audio: `cache/audio/`
-- OpenAI results cached in SQLite (example sentences).
+- **Vercel + Supabase:** All data in Supabase (users, words, user_progress, test_results, etc.). See `frontend/supabase/migrations/001_initial.sql`.
+- **Local (legacy):** SQLite `cache/app.db`, audio in `cache/audio/`.
 
