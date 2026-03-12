@@ -362,6 +362,19 @@ def delete_cached_generated_test(
     )
 
 
+def add_weak_word(conn: sqlite3.Connection, user_id: int, word_id: int) -> None:
+    """
+    Directly mark a word as weak for a user (used for test mistakes).
+    """
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO weak_words (user_id, word_id)
+        VALUES (?, ?)
+        """,
+        (user_id, word_id),
+    )
+
+
 def _ensure_user_stats_row(conn: sqlite3.Connection, user_id: int) -> None:
     ensure_user_stats_table(conn)
     row = conn.execute("SELECT id, username FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -487,4 +500,82 @@ def refresh_all_user_stats(conn: sqlite3.Connection) -> None:
     rows = conn.execute("SELECT id FROM users").fetchall()
     for r in rows:
         _update_user_stats(conn, int(r["id"]))
+
+
+def update_word_mastery_from_test(
+    conn: sqlite3.Connection,
+    user_id: int,
+    word_id: int,
+    section: str,
+    correct: bool,
+) -> None:
+    """
+    Update per-word mastery flags based on a single test question result.
+    section: 'meaning' (reading), 'listening', or 'writing'.
+    """
+    if not correct:
+        return
+
+    col_map = {
+        "meaning": "reading_correct",
+        "listening": "listening_correct",
+        "writing": "writing_correct",
+    }
+    col = col_map.get(section)
+    if not col:
+        return
+
+    conn.execute(
+        """
+        INSERT INTO word_mastery (user_id, word_id, reading_correct, listening_correct, writing_correct, mastered)
+        VALUES (?, ?, 0, 0, 0, 0)
+        ON CONFLICT(user_id, word_id) DO NOTHING
+        """,
+        (user_id, word_id),
+    )
+
+    conn.execute(
+        f"""
+        UPDATE word_mastery
+        SET {col} = 1
+        WHERE user_id = ? AND word_id = ?
+        """,
+        (user_id, word_id),
+    )
+
+    conn.execute(
+        """
+        UPDATE word_mastery
+        SET mastered = CASE
+            WHEN reading_correct = 1 AND listening_correct = 1 AND writing_correct = 1 THEN 1
+            ELSE 0
+        END
+        WHERE user_id = ? AND word_id = ?
+        """,
+        (user_id, word_id),
+    )
+
+
+def get_word_mastery(conn: sqlite3.Connection, user_id: int, word_id: int) -> dict[str, bool]:
+    row = conn.execute(
+        """
+        SELECT reading_correct, listening_correct, writing_correct, mastered
+        FROM word_mastery
+        WHERE user_id = ? AND word_id = ?
+        """,
+        (user_id, word_id),
+    ).fetchone()
+    if not row:
+        return {
+            "reading_correct": False,
+            "listening_correct": False,
+            "writing_correct": False,
+            "mastered": False,
+        }
+    return {
+        "reading_correct": bool(row["reading_correct"]),
+        "listening_correct": bool(row["listening_correct"]),
+        "writing_correct": bool(row["writing_correct"]),
+        "mastered": bool(row["mastered"]),
+    }
 
