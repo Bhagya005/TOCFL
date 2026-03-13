@@ -57,21 +57,37 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: users, error } = await supabase
-      .from("users")
-      .select("id, username, password_hash");
+    const norm = (s: string) => (s ?? "").trim().normalize("NFC").replace(INVISIBLE_REGEX, "");
 
-    if (error) {
-      return NextResponse.json(
-        { detail: "Invalid username or password" },
-        { status: 401, headers: NO_CACHE_HEADERS }
-      );
+    let row: { id: number; username: string; password_hash: string } | null = null;
+
+    const { data: exactRow, error: exactError } = await supabase
+      .from("users")
+      .select("id, username, password_hash")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (!exactError && exactRow) {
+      row = exactRow as { id: number; username: string; password_hash: string };
     }
 
-    const norm = (s: string) => (s ?? "").trim().normalize("NFC");
-    const row =
-      users?.find((u) => norm(u.username) === username) ??
-      users?.find((u) => norm(u.username).toLowerCase() === username.toLowerCase());
+    if (!row) {
+      const { data: users, error } = await supabase
+        .from("users")
+        .select("id, username, password_hash");
+
+      if (error) {
+        return NextResponse.json(
+          { detail: "Invalid username or password" },
+          { status: 401, headers: NO_CACHE_HEADERS }
+        );
+      }
+      row =
+        users?.find((u) => norm(u.username) === username) ??
+        users?.find((u) => norm(u.username).toLowerCase() === username.toLowerCase()) ??
+        null;
+    }
+
     if (!row || !row.password_hash) {
       return NextResponse.json(
         { detail: "Invalid username or password" },
@@ -80,10 +96,14 @@ export async function POST(request: Request) {
     }
 
     const storedHash = String(row.password_hash).trim();
-    const passwordNfc = password.normalize("NFC");
-    const verified =
-      verifyPassword(password, storedHash) ||
-      (password !== passwordNfc && verifyPassword(passwordNfc, storedHash));
+    const passwordVariants = [
+      password,
+      password.normalize("NFC"),
+      password.normalize("NFD"),
+      password.normalize("NFKC"),
+      password.normalize("NFKD"),
+    ];
+    const verified = passwordVariants.some((p) => verifyPassword(p, storedHash));
     if (!verified) {
       return NextResponse.json(
         { detail: "Invalid username or password" },
