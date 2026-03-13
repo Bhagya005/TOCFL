@@ -16,16 +16,23 @@ export function hashPassword(password: string): string {
 
 export function verifyPassword(password: string, stored: string): boolean {
   try {
-    const parts = stored.split("$", 4);
+    const raw = typeof stored === "string" ? stored.trim() : "";
+    const parts = raw.split("$", 4);
     if (parts.length < 4 || parts[0] !== "pbkdf2_sha256") return false;
     const iters = parseInt(parts[1], 10);
-    const saltHex = parts[2];
-    const expected = parts[3];
+    if (!Number.isInteger(iters) || iters < 1) return false;
+    const saltHex = parts[2].trim();
+    const expected = parts[3].trim();
+    if (!saltHex || !expected) return false;
     const salt = Buffer.from(saltHex, "hex");
+    if (salt.length !== 16) return false;
     const key = pbkdf2Sync(password, salt, iters, 32, "sha256");
     const candidate = key.toString("hex");
     if (candidate.length !== expected.length) return false;
-    return timingSafeEqual(Buffer.from(candidate, "utf8"), Buffer.from(expected, "utf8"));
+    const a = Buffer.from(candidate, "utf8");
+    const b = Buffer.from(expected, "utf8");
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
   } catch {
     return false;
   }
