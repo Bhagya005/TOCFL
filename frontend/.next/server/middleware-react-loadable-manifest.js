@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST='{"app/(main)/tests/[testType]/page.tsx -> @/lib/speech":{"id":4275,"files":["static/chunks/275.50a755e21f8793a2.js"]}}';
+self.__REACT_LOADABLE_MANIFEST="{}"

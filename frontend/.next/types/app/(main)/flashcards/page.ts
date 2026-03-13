@@ -1,4 +1,4 @@
-// File: /Users/bhagyasureshkumar/TOCFL/frontend/src/app/(main)/flashcards/page.tsx
+// File: C:\Users\Bhagya Suresh Kumar\Desktop\TOCFL\frontend\src\app\(main)\flashcards\page.tsx
 import * as entry from '../../../../../src/app/(main)/flashcards/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
