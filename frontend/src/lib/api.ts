@@ -88,6 +88,7 @@ export async function login(username: string, password: string): Promise<User> {
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ username, password }),
       credentials: "include",
+      cache: "no-store",
     });
   } catch (err) {
     handleFetchError(err, "Login failed");
@@ -115,6 +116,7 @@ export async function register(username: string, password: string): Promise<User
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ username, password }),
       credentials: "include",
+      cache: "no-store",
     });
   } catch (err) {
     handleFetchError(err, "Registration failed");
