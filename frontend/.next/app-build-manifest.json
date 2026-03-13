@@ -1,20 +1,106 @@
 {
   "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/_not-found/page-9a1795a099256da4.js"
+    ],
     "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/css/79bb3b21b61f9d2b.css",
+      "static/chunks/app/layout-6638482137ef3d7c.js"
     ],
     "/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/login/page-ad3a5ed372487bf3.js"
     ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+    "/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/page-4406ff7ba936e5ec.js"
+    ],
+    "/(main)/dashboard/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/dashboard/page-e8efbd501e29d397.js"
+    ],
+    "/(main)/layout": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/933-cae5f8a4e5dffe81.js",
+      "static/chunks/app/(main)/layout-c3668dc46f156dce.js"
+    ],
+    "/(main)/progress/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/progress/page-bbf1b3a05ea0908e.js"
+    ],
+    "/(main)/tests/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/933-cae5f8a4e5dffe81.js",
+      "static/chunks/app/(main)/tests/page-579b008c00d3d2e6.js"
+    ],
+    "/(main)/tests/[testType]/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/933-cae5f8a4e5dffe81.js",
+      "static/chunks/app/(main)/tests/[testType]/page-82e3e086c824b864.js"
+    ],
+    "/(main)/pinyin-chart/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/pinyin-chart/page-e469c209037f83c6.js"
+    ],
+    "/(main)/weak-words/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/weak-words/page-7ecc168cbcd47df8.js"
+    ],
+    "/(main)/word-bank/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/word-bank/page-c602561f43625598.js"
+    ],
+    "/(main)/leaderboard/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/leaderboard/page-37a49747d7c3d500.js"
+    ],
+    "/(main)/flashcards/page": [
+      "static/chunks/webpack-576131ade8e3e5bf.js",
+      "static/chunks/fd9d1056-f8a2d551cbb94c85.js",
+      "static/chunks/117-d0aa9486d6cf1a7a.js",
+      "static/chunks/main-app-ad66eb5fa6925727.js",
+      "static/chunks/app/(main)/flashcards/page-dbe9ca2bf312352f.js"
     ]
   }
 }

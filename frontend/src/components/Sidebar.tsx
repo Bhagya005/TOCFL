@@ -9,6 +9,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/flashcards", label: "Flashcards", icon: "🃏" },
   { href: "/tests", label: "Tests", icon: "📋" },
+  { href: "/pinyin-chart", label: "Pinyin Chart", icon: "🔤" },
   { href: "/weak-words", label: "Weak Words", icon: "⚠️" },
   { href: "/word-bank", label: "Word Bank", icon: "📚" },
   { href: "/leaderboard", label: "Leaderboard", icon: "🏆" },
