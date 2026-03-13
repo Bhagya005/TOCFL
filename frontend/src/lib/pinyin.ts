@@ -76,16 +76,20 @@ export function numbersToToneMarks(pinyin: string): string {
 
 /**
  * Normalize pinyin for strict comparison: both formats → tone marks, lower case, no spaces.
- * Used so "lao3shi1" and "lǎoshī" compare equal. Tones must match exactly.
+ * - User input with tone numbers (wo3, peng2you3) is converted to tone marks (wǒ, péngyǒu).
+ * - Dataset pinyin in either numbers or tone marks is normalized to the same form.
+ * - Tones must match exactly (wo3 = wǒ is correct; wo2 ≠ wǒ is incorrect).
+ * Returns NFC-normalized string for consistent comparison across devices.
  */
 export function normalizePinyinForComparison(input: string): string {
   if (!input || typeof input !== "string") return "";
   const trimmed = input.trim().toLowerCase().replace(/\s/g, "");
   if (!trimmed) return "";
-  // If it contains digits 1-4, treat as tone numbers and convert to tone marks
+  let result: string;
   if (/[1-4]/.test(trimmed)) {
-    return numbersToToneMarks(trimmed).toLowerCase();
+    result = numbersToToneMarks(trimmed).toLowerCase();
+  } else {
+    result = trimmed;
   }
-  // Already tone marks (or no tones): normalize case and spacing only
-  return trimmed;
+  return result.normalize("NFC");
 }

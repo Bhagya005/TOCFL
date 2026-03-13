@@ -102,6 +102,7 @@ export async function POST(request: Request) {
         typeof userAns === "string" && String(userAns).trim()
           ? String(userAns).trim()
           : "(no answer)";
+      // Normalize both to tone marks (wo3 → wǒ; dataset may be numbers or marks). Tones must match.
       const normalizedUser = normalizePinyinForComparison(userText);
       const normalizedCorrect = normalizePinyinForComparison(correctPinyinNumbers);
       const isCorrect = Boolean(
