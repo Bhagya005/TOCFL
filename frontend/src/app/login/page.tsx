@@ -68,25 +68,35 @@ export default function LoginPage() {
         {error && <p className="text-red-400 text-base font-medium mb-4">{error}</p>}
         {message && <p className="text-green-400 text-base font-medium mb-4">{message}</p>}
         {tab === "login" ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400"
-            />
-            <button type="submit" className="w-full py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium">
-              Log in
-            </button>
-          </form>
+          <>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400"
+              />
+              <button type="submit" className="w-full py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium">
+                Log in
+              </button>
+            </form>
+            <p className="mt-4 text-center">
+              <Link
+                href="/forgot-password"
+                className="text-amber-400 hover:text-amber-300 text-sm font-medium"
+              >
+                Forgot password?
+              </Link>
+            </p>
+          </>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <input
