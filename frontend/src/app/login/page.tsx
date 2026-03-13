@@ -13,11 +13,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  const n = (s: string) => s.trim().normalize("NFC");
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      await login(username.trim(), password);
+      await login(n(username), n(password));
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
@@ -34,7 +36,7 @@ export default function LoginPage() {
       return;
     }
     try {
-      await register(username.trim(), password);
+      await register(n(username), n(password));
       setMessage("Account created. You can log in now.");
       setTab("login");
     } catch (err) {

@@ -8,11 +8,20 @@ const NO_CACHE_HEADERS = {
   Pragma: "no-cache",
 };
 
+const INVISIBLE_REGEX = /[\u200B-\u200D\u2060\uFEFF\u00AD]/g;
+
+function normalizeInput(s: string): string {
+  return s
+    .trim()
+    .replace(INVISIBLE_REGEX, "")
+    .normalize("NFC");
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const username = String(body?.username ?? "").trim();
-    const password = String(body?.password ?? "").trim();
+    const username = normalizeInput(String(body?.username ?? ""));
+    const password = normalizeInput(String(body?.password ?? ""));
     if (!username || !password) {
       return NextResponse.json(
         { detail: "Username and password required" },

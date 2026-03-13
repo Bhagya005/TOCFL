@@ -8,14 +8,23 @@ const NO_CACHE_HEADERS = {
   Pragma: "no-cache",
 };
 
+const INVISIBLE_REGEX = /[\u200B-\u200D\u2060\uFEFF\u00AD]/g;
+
+function normalizeInput(s: string): string {
+  return s
+    .trim()
+    .replace(INVISIBLE_REGEX, "")
+    .normalize("NFC");
+}
+
 async function getLoginBody(request: Request): Promise<{ username: string; password: string } | null> {
   const contentType = (request.headers.get("content-type") ?? "").toLowerCase();
   if (contentType.includes("application/json")) {
     const body = await request.json().catch(() => null);
     if (body && typeof body === "object") {
       return {
-        username: String(body.username ?? "").trim(),
-        password: String(body.password ?? "").trim(),
+        username: normalizeInput(String(body.username ?? "")),
+        password: normalizeInput(String(body.password ?? "")),
       };
     }
   }
@@ -23,8 +32,8 @@ async function getLoginBody(request: Request): Promise<{ username: string; passw
     const form = await request.formData().catch(() => null);
     if (form) {
       return {
-        username: String(form.get("username") ?? "").trim(),
-        password: String(form.get("password") ?? "").trim(),
+        username: normalizeInput(String(form.get("username") ?? "")),
+        password: normalizeInput(String(form.get("password") ?? "")),
       };
     }
   }
@@ -59,11 +68,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const norm = (s: string) => (s ?? "").trim().normalize("NFC");
     const row =
-      users?.find((u) => (u.username ?? "").trim() === username) ??
-      users?.find(
-        (u) => (u.username ?? "").trim().toLowerCase() === username.toLowerCase()
-      );
+      users?.find((u) => norm(u.username) === username) ??
+      users?.find((u) => norm(u.username).toLowerCase() === username.toLowerCase());
     if (!row || !row.password_hash) {
       return NextResponse.json(
         { detail: "Invalid username or password" },
@@ -72,7 +80,11 @@ export async function POST(request: Request) {
     }
 
     const storedHash = String(row.password_hash).trim();
-    if (!verifyPassword(password, storedHash)) {
+    const passwordNfc = password.normalize("NFC");
+    const verified =
+      verifyPassword(password, storedHash) ||
+      (password !== passwordNfc && verifyPassword(passwordNfc, storedHash));
+    if (!verified) {
       return NextResponse.json(
         { detail: "Invalid username or password" },
         { status: 401, headers: NO_CACHE_HEADERS }
