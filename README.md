@@ -51,7 +51,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:3000**. Log in or create a user (up to 2 users). Use Dashboard, Flashcards, Tests, Leaderboard, Progress, Weak Words, and Word Bank.
+Open **http://localhost:3000**. Log in or create a user (up to 5 users). Use Dashboard, Flashcards, Tests, Leaderboard, Progress, Weak Words, and Word Bank.
 
 ## Deploy full stack on Vercel (Supabase)
 

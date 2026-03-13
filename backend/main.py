@@ -228,8 +228,8 @@ def login(req: LoginRequest, conn: sqlite3.Connection = Depends(get_db)):
 @app.post("/api/auth/register")
 def register(req: RegisterRequest, conn: sqlite3.Connection = Depends(get_db)):
     ensure_vocab(conn)
-    if models.count_users(conn) >= 2:
-        raise HTTPException(status_code=400, detail="User limit reached (2 users).")
+    if models.count_users(conn) >= 5:
+        raise HTTPException(status_code=400, detail="User limit reached (5 users).")
     u = req.username.strip()
     if not u or not req.password:
         raise HTTPException(status_code=400, detail="Username and password required")

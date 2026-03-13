@@ -18,9 +18,9 @@ export async function POST(request: Request) {
     const { count } = await supabase
       .from("users")
       .select("*", { count: "exact", head: true });
-    if ((count ?? 0) >= 2) {
+    if ((count ?? 0) >= 5) {
       return NextResponse.json(
-        { detail: "User limit reached (2 users)." },
+        { detail: "User limit reached (5 users)." },
         { status: 400 }
       );
     }
