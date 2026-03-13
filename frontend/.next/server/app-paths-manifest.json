@@ -1,27 +1,4 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/audio/route": "app/api/audio/route.js",
-  "/api/flashcards/today/route": "app/api/flashcards/today/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/auth/register/route": "app/api/auth/register/route.js",
-  "/api/dashboard/route": "app/api/dashboard/route.js",
-  "/api/leaderboard/route": "app/api/leaderboard/route.js",
-  "/api/flashcards/answer/route": "app/api/flashcards/answer/route.js",
-  "/api/me/route": "app/api/me/route.js",
-  "/api/tests/eligible/route": "app/api/tests/eligible/route.js",
-  "/api/progress/route": "app/api/progress/route.js",
-  "/api/tests/start/route": "app/api/tests/start/route.js",
-  "/api/tests/submit/route": "app/api/tests/submit/route.js",
-  "/api/weak-words/route": "app/api/weak-words/route.js",
-  "/login/page": "app/login/page.js",
-  "/api/word-bank/route": "app/api/word-bank/route.js",
-  "/page": "app/page.js",
-  "/(main)/flashcards/page": "app/(main)/flashcards/page.js",
-  "/(main)/word-bank/page": "app/(main)/word-bank/page.js",
-  "/(main)/weak-words/page": "app/(main)/weak-words/page.js",
-  "/(main)/leaderboard/page": "app/(main)/leaderboard/page.js",
-  "/(main)/tests/[testType]/page": "app/(main)/tests/[testType]/page.js",
-  "/(main)/dashboard/page": "app/(main)/dashboard/page.js",
-  "/(main)/progress/page": "app/(main)/progress/page.js",
-  "/(main)/tests/page": "app/(main)/tests/page.js"
+  "/login/page": "app/login/page.js"
 }
