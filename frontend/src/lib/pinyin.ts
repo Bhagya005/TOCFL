@@ -65,13 +65,25 @@ function convertSyllableToken(token: string): string {
 /**
  * Convert numbered pinyin to tone marks (e.g. lao3shi1 → lǎoshī).
  * Splits by syllable boundaries: letter run + digit 1-4 (or 0/5 for neutral).
+ * If the string contains "(", only the part before "(" is converted; the rest is reattached as-is (e.g. wa2(wa) → wá(wa)).
  */
-export function numbersToToneMarks(pinyin: string): string {
-  if (!pinyin || typeof pinyin !== "string") return "";
-  const s = pinyin.trim().replace(/u:/gi, "ü").replace(/v/gi, "ü");
+function numbersToToneMarksCore(s: string): string {
+  if (!s) return "";
   const syllableRegex = /[a-zü]+[1-4]|[a-zü]+[05]?/gi;
   const tokens = s.match(syllableRegex) || [];
   return tokens.map(convertSyllableToken).join("");
+}
+
+export function numbersToToneMarks(pinyin: string): string {
+  if (!pinyin || typeof pinyin !== "string") return "";
+  const s = pinyin.trim().replace(/u:/gi, "ü").replace(/v/gi, "ü");
+  const parenIdx = s.indexOf("(");
+  if (parenIdx !== -1) {
+    const pinyinPart = s.slice(0, parenIdx);
+    const parenPart = s.slice(parenIdx);
+    return numbersToToneMarksCore(pinyinPart) + parenPart;
+  }
+  return numbersToToneMarksCore(s);
 }
 
 /**

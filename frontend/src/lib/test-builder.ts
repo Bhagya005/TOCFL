@@ -1,3 +1,5 @@
+import { numbersToToneMarks } from "@/lib/pinyin";
+
 type Word = {
   id: number;
   character?: string;
@@ -45,27 +47,6 @@ function sampleUnique<T>(
     picked.push(`${fallback}${picked.length + 1}`);
   }
   return picked;
-}
-
-function numbersToToneMarks(pinyin: string): string {
-  const toneMap: Record<string, string> = {
-    a: "āáǎàa",
-    e: "ēéěèe",
-    i: "īíǐìi",
-    o: "ōóǒòo",
-    u: "ūúǔùu",
-    v: "ǖǘǚǜü",
-  };
-  let out = pinyin;
-  for (const [vowel, tones] of Object.entries(toneMap)) {
-    for (let t = 1; t <= 5; t++) {
-      const idx = t === 5 ? 5 : t - 1;
-      const marked = tones[idx];
-      const re = new RegExp(`${vowel}${t}`, "gi");
-      out = out.replace(re, marked);
-    }
-  }
-  return out.replace(/[1-5]/g, "");
 }
 
 export function buildThreeSectionTest(
