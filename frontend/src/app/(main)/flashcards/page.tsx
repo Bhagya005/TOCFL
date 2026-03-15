@@ -17,6 +17,7 @@ type FlashcardsData = {
   start_id: number;
   end_id: number;
   day: number;
+  message?: string;
 };
 
 type Mode = "today" | "previous";
@@ -85,7 +86,7 @@ export default function FlashcardsPage() {
 
   if (!data) return null;
 
-  const { words, total_due, total_new, total_weak } = data;
+  const { words, total_due, total_new, total_weak, message } = data;
   const displayDay = mode === "today" ? (data?.day ?? 1) : (day ?? data?.day ?? 1);
 
   if (words.length === 0) {
@@ -111,7 +112,7 @@ export default function FlashcardsPage() {
         <h1 className="text-2xl font-bold text-slate-100">Flashcards</h1>
         <EmptyState
           title={mode === "today" ? "No flashcards for today" : `No flashcards for day ${displayDay}`}
-          description="No words due for review and no new words in this day's range."
+          description={message ?? "No words due for review and no new words in this day's range."}
           icon="🃏"
         />
       </div>
