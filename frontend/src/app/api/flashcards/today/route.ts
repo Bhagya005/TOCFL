@@ -58,7 +58,8 @@ export async function GET(request: Request) {
       (Number(up?.mistakes ?? 0) > Number(up?.correct ?? 0));
     if (isWeak) weakWordIds.add(wid);
     if (wp?.next_review && wp.next_review <= now) dueWordIds.add(wid);
-    if (!wp) newWordIds.add(wid);
+    // New = this user hasn't studied this word yet (no user_progress), so they always have something to learn
+    if (!up) newWordIds.add(wid);
   });
 
   const due = (wordsData ?? []).filter((w) => dueWordIds.has(w.id)).sort((a, b) => a.id - b.id);
