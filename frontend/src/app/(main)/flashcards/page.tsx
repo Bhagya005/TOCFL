@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import FlashcardCard, { type FlashcardWord } from "@/components/ui/FlashcardCard";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -19,18 +20,26 @@ type FlashcardsData = {
 };
 
 export default function FlashcardsPage() {
-  const [day, setDay] = useState(1);
+  const searchParams = useSearchParams();
+  const dayFromUrl = searchParams.get("day");
+  const initialDay =
+    dayFromUrl != null && dayFromUrl !== ""
+      ? Math.max(1, Math.min(20, parseInt(dayFromUrl, 10) || 1))
+      : null;
+  const [day, setDay] = useState<number | null>(() => initialDay);
   const [data, setData] = useState<FlashcardsData | null>(null);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const load = useCallback((d: number) => {
+  const load = useCallback((d: number | null) => {
     setLoading(true);
-    api<FlashcardsData>(`/api/flashcards/today?day=${d}`)
+    const url = d == null ? "/api/flashcards/today" : `/api/flashcards/today?day=${d}`;
+    api<FlashcardsData>(url)
       .then((res) => {
         setData(res);
+        if (d == null) setDay(res.day);
         setIndex(0);
         setFlipped(false);
       })
@@ -94,7 +103,7 @@ export default function FlashcardsPage() {
             type="number"
             min={1}
             max={20}
-            value={day}
+            value={day ?? data?.day ?? 1}
             onChange={(e) => setDay(parseInt(e.target.value, 10) || 1)}
             className="input-field w-20"
           />
