@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import StatCard from "@/components/ui/StatCard";
@@ -29,21 +30,16 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
 
-    api<DashboardData>("/api/dashboard")
-      .then((data) => {
-        if (!cancelled) setDashboard(data);
-        return data;
-      })
-      .then((data) => {
-        const day = data?.plan?.current_day ?? 1;
-        return api<FlashcardsMeta>(
-          `/api/flashcards/today?day=${day}`
-        ).then((meta) => {
-          if (!cancelled) setFlashcardsMeta(meta);
-        });
-      })
-      .catch((e) => !cancelled && setErr(e.message))
-      .finally(() => !cancelled && setLoading(false));
+    // Use same endpoint as "Today's session" on flashcards (no day param) so count always matches
+    Promise.allSettled([
+      api<DashboardData>("/api/dashboard"),
+      api<FlashcardsMeta>("/api/flashcards/today"),
+    ]).then(([dashboardResult, metaResult]) => {
+      if (cancelled) return;
+      if (dashboardResult.status === "fulfilled") setDashboard(dashboardResult.value);
+      else setErr(dashboardResult.reason?.message ?? "Failed to load dashboard");
+      if (metaResult.status === "fulfilled") setFlashcardsMeta(metaResult.value);
+    }).finally(() => !cancelled && setLoading(false));
 
     api<{ leaderboard: LeaderboardRow[] }>("/api/leaderboard")
       .then((res) => !cancelled && setLeaderboard(res.leaderboard || []))
@@ -200,7 +196,11 @@ export default function DashboardPage() {
       <section>
         <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Today&apos;s tasks</h2>
         <ul className="card p-4 md:p-6 list-disc list-inside text-slate-300 space-y-2">
-          <li>Flashcards today: {flashcardsToday}</li>
+          <li>
+            <Link href="/flashcards" className="text-amber-400 hover:text-amber-300 underline">
+              Flashcards today: {flashcardsToday}
+            </Link>
+          </li>
           <li>Daily test: 35 questions</li>
         </ul>
       </section>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { normalizePinyinForComparison } from "@/lib/pinyin";
+import { getCurrentStudyDay, tryAdvanceStudyDay } from "@/lib/study-progress";
 import { supabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
@@ -126,17 +127,25 @@ export async function POST(request: Request) {
   const totalCorrect = meaningCorrect + listeningCorrect + writingCorrect;
   const accuracyPercent = total > 0 ? (100.0 * totalCorrect) / total : 0;
 
-  const { data: existing } = await supabase
+  const payloadWithStudyDay = payload as { study_day?: number };
+  const studyDay =
+    testType === "daily"
+      ? payloadWithStudyDay?.study_day ?? (await getCurrentStudyDay(user.id))
+      : null;
+
+  const existingQuery = supabase
     .from("test_results")
     .select("id")
     .eq("user_id", user.id)
-    .eq("test_type", testType)
-    .eq("date", today)
-    .limit(1)
-    .single();
+    .eq("test_type", testType);
+  const existingQueryWithDay =
+    testType === "daily" && studyDay != null
+      ? existingQuery.eq("study_day", studyDay)
+      : existingQuery.eq("date", today);
+  const { data: existing } = await existingQueryWithDay.limit(1).single();
 
   if (!existing) {
-    await supabase.from("test_results").insert({
+    const insertRow: Record<string, unknown> = {
       user_id: user.id,
       date: today,
       test_type: testType,
@@ -149,7 +158,13 @@ export async function POST(request: Request) {
         writing_score: writingCorrect,
         accuracy_percent: Math.round(accuracyPercent * 10) / 10,
       },
-    });
+    };
+    if (testType === "daily" && studyDay != null) insertRow.study_day = studyDay;
+    await supabase.from("test_results").insert(insertRow);
+
+    if (testType === "daily" && studyDay != null) {
+      await tryAdvanceStudyDay(user.id, studyDay);
+    }
   }
 
   return NextResponse.json({

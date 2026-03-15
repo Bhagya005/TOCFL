@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
-import { computeStudyPlan, dayWordRange, weekWordUpto } from "@/lib/study";
+import { getCurrentStudyDay, getLastCompletedStudyDay } from "@/lib/study-progress";
+import { dayWordRange, weekWordUpto } from "@/lib/study";
 import { buildDailyTest, buildWeeklyTest, buildFinalTest } from "@/lib/test-builder";
 import { supabase } from "@/lib/supabase-server";
 
@@ -18,15 +19,16 @@ export async function POST(request: Request) {
   const testType = (body?.test_type ?? "daily").toLowerCase();
 
   const startDateStr = await getOrSetStartDate(user.id);
-  const startDate = new Date(startDateStr);
-  const plan = computeStudyPlan(startDate);
   const today = new Date().toISOString().slice(0, 10);
 
   let words: { id: number; character?: string; pinyin?: string; meaning?: string; example_sentence?: string; example_translation?: string; example_pinyin?: string }[];
   let seed: number;
+  let dailyStudyDay: number | null = null;
 
   if (testType === "daily") {
-    const [startId, endId] = dayWordRange(plan.currentDay);
+    const currentDay = await getCurrentStudyDay(user.id);
+    dailyStudyDay = currentDay;
+    const [startId, endId] = dayWordRange(currentDay);
     const { data } = await supabase
       .from("words")
       .select("id, character, pinyin, meaning, pos")
@@ -45,13 +47,15 @@ export async function POST(request: Request) {
     });
     seed = parseInt(startDateStr.replace(/-/g, ""), 10) + user.id * 997;
   } else if (testType === "weekly") {
-    if (plan.currentDay < 7) {
+    const lastCompleted = await getLastCompletedStudyDay(user.id);
+    if (lastCompleted < 7) {
       return NextResponse.json(
-        { detail: "Weekly tests unlock on Day 7." },
+        { detail: "Weekly tests unlock after completing Day 7." },
         { status: 400 }
       );
     }
-    const upto = weekWordUpto(plan.currentDay);
+    const currentDay = await getCurrentStudyDay(user.id);
+    const upto = weekWordUpto(currentDay);
     const { data } = await supabase
       .from("words")
       .select("id, character, pinyin, meaning, pos")
@@ -69,9 +73,10 @@ export async function POST(request: Request) {
     });
     seed = parseInt(startDateStr.replace(/-/g, ""), 10) + user.id * 997 + 7;
   } else if (testType === "final") {
-    if (plan.currentDay < 20) {
+    const lastCompleted = await getLastCompletedStudyDay(user.id);
+    if (lastCompleted < 20) {
       return NextResponse.json(
-        { detail: "Final test unlocks on Day 20." },
+        { detail: "Final test unlocks after completing Day 20." },
         { status: 400 }
       );
     }
@@ -113,12 +118,14 @@ export async function POST(request: Request) {
     if (testType === "daily") questions = buildDailyTest(words, seed);
     else if (testType === "weekly") questions = buildWeeklyTest(words, seed);
     else questions = buildFinalTest(words, seed);
+    const payload: Record<string, unknown> = { questions };
+    if (dailyStudyDay != null) payload.study_day = dailyStudyDay;
     await supabase.from("generated_tests").upsert(
       {
         user_id: user.id,
         date: today,
         test_type: testType,
-        payload_json: { questions },
+        payload_json: payload,
       },
       { onConflict: "user_id,date,test_type" }
     );

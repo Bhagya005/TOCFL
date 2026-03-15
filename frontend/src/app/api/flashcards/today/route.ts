@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { getOrSetStartDate } from "@/lib/db";
-import { dayWordRange, WORDS_PER_DAY, computeStudyPlan } from "@/lib/study";
+import { getCurrentStudyDay } from "@/lib/study-progress";
+import { dayWordRange, WORDS_PER_DAY } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
@@ -15,12 +15,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const dayParam = searchParams.get("day");
-  // Use current day when day is omitted so dashboard and flashcards page share the same "today"
+  // Use next study day when day is omitted (same as dashboard)
   let day: number;
   if (dayParam == null || dayParam === "") {
-    const startDateStr = await getOrSetStartDate(user.id);
-    const plan = computeStudyPlan(new Date(startDateStr));
-    day = plan.currentDay;
+    day = await getCurrentStudyDay(user.id);
   } else {
     day = Math.max(1, Math.min(20, parseInt(dayParam, 10) || 1));
   }

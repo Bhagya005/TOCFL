@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { getCurrentStudyDay, tryAdvanceStudyDay } from "@/lib/study-progress";
+import { dayWordRange } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
 
 function nextReview(score: number): string {
@@ -84,6 +86,12 @@ export async function POST(request: Request) {
       correct: knew ? 1 : 0,
       last_seen: now,
     });
+  }
+
+  const currentDay = await getCurrentStudyDay(user.id);
+  const [startId, endId] = dayWordRange(currentDay);
+  if (wordId >= startId && wordId <= endId) {
+    await tryAdvanceStudyDay(user.id, currentDay);
   }
 
   return NextResponse.json({ ok: true });

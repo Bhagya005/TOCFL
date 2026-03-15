@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
-import { computeStudyPlan, dayWordRange, weekWordUpto } from "@/lib/study";
+import { getCurrentStudyDay, getLastCompletedStudyDay } from "@/lib/study-progress";
+import { dayWordRange, weekWordUpto } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
@@ -14,12 +15,11 @@ export async function GET(request: Request) {
   }
 
   const startDateStr = await getOrSetStartDate(user.id);
-  const startDate = new Date(startDateStr);
-  const plan = computeStudyPlan(startDate);
   const testType = (new URL(request.url).searchParams.get("test_type") ?? "daily").toLowerCase();
 
   if (testType === "daily") {
-    const [startId, endId] = dayWordRange(plan.currentDay);
+    const currentDay = await getCurrentStudyDay(user.id);
+    const [startId, endId] = dayWordRange(currentDay);
     const { data: words } = await supabase
       .from("words")
       .select("id, character, pinyin, meaning, pos")
@@ -52,15 +52,17 @@ export async function GET(request: Request) {
   }
 
   if (testType === "weekly") {
-    if (plan.currentDay < 7) {
+    const lastCompleted = await getLastCompletedStudyDay(user.id);
+    if (lastCompleted < 7) {
       return NextResponse.json({
         can_start: false,
         message:
-          "Weekly tests unlock on Day 7, Day 14, and Day 20.",
+          "Weekly tests unlock after completing Day 7, Day 14, and Day 20.",
         eligible: [],
       });
     }
-    const upto = weekWordUpto(plan.currentDay);
+    const currentDay = await getCurrentStudyDay(user.id);
+    const upto = weekWordUpto(currentDay);
     const { data: words } = await supabase
       .from("words")
       .select("id, character, pinyin, meaning, pos")
@@ -91,10 +93,11 @@ export async function GET(request: Request) {
   }
 
   if (testType === "final") {
-    if (plan.currentDay < 20) {
+    const lastCompleted = await getLastCompletedStudyDay(user.id);
+    if (lastCompleted < 20) {
       return NextResponse.json({
         can_start: false,
-        message: "Final test unlocks on Day 20.",
+        message: "Final test unlocks after completing Day 20.",
         eligible: [],
       });
     }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
-import { computeStudyPlan } from "@/lib/study";
+import { getCurrentStudyDay, unlockedUptoWordIdForDay } from "@/lib/study-progress";
 import { supabase } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   }
   const startDateStr = await getOrSetStartDate(user.id);
   const startDate = new Date(startDateStr);
-  const plan = computeStudyPlan(startDate);
+  const currentDay = await getCurrentStudyDay(user.id);
+  const unlockedUptoWordId = unlockedUptoWordIdForDay(currentDay);
 
   const { data: progressRows } = await supabase
     .from("user_progress")
@@ -28,14 +29,16 @@ export async function GET(request: Request) {
 
   const { data: testRows } = await supabase
     .from("test_results")
-    .select("date, test_type, score, total")
+    .select("date, test_type, score, total, study_day")
     .eq("user_id", user.id)
     .order("date", { ascending: true });
 
   const testList = (testRows ?? []).map((r) => {
+    const studyDay = (r as { study_day?: number | null }).study_day;
     const d = new Date(startDate);
     const t = new Date(r.date);
-    const dayIndex = Math.floor((t.getTime() - d.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+    const dayIndex =
+      studyDay != null ? studyDay : Math.floor((t.getTime() - d.getTime()) / (24 * 60 * 60 * 1000)) + 1;
     return {
       date: r.date,
       test_type: r.test_type,
@@ -47,8 +50,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     plan: {
-      current_day: plan.currentDay,
-      unlocked_upto_word_id: plan.unlockedUptoWordId,
+      current_day: currentDay,
+      unlocked_upto_word_id: unlockedUptoWordId,
     },
     start_date: startDateStr,
     summary: {
