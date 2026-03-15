@@ -11,6 +11,8 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 type FlashcardsData = {
   words: FlashcardWord[];
   count: number;
+  completed_in_day?: number;
+  words_per_day?: number;
   total_due: number;
   total_new: number;
   total_weak: number;
@@ -86,8 +88,14 @@ export default function FlashcardsPage() {
 
   if (!data) return null;
 
-  const { words, total_due, total_new, total_weak, message } = data;
+  const { words, total_due, total_new, total_weak, message, completed_in_day, words_per_day } = data;
   const displayDay = mode === "today" ? (data?.day ?? 1) : (day ?? data?.day ?? 1);
+  const dayProgress =
+    mode === "today" &&
+    completed_in_day != null &&
+    words_per_day != null
+      ? `${completed_in_day}/${words_per_day} completed for this day`
+      : null;
 
   if (words.length === 0) {
     return (
@@ -172,6 +180,9 @@ export default function FlashcardsPage() {
             ) : (
               <span className="text-sm text-slate-400">
                 Day <strong className="text-slate-200">{displayDay}</strong> (today)
+                {dayProgress != null && (
+                  <span className="ml-2 text-slate-500">· {dayProgress}</span>
+                )}
               </span>
             )}
             <p className="text-sm text-slate-500">

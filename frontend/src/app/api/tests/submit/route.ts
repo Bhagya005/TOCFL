@@ -133,38 +133,25 @@ export async function POST(request: Request) {
       ? payloadWithStudyDay?.study_day ?? (await getCurrentStudyDay(user.id))
       : null;
 
-  const existingQuery = supabase
-    .from("test_results")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("test_type", testType);
-  const existingQueryWithDay =
-    testType === "daily" && studyDay != null
-      ? existingQuery.eq("study_day", studyDay)
-      : existingQuery.eq("date", today);
-  const { data: existing } = await existingQueryWithDay.limit(1).single();
+  const insertRow: Record<string, unknown> = {
+    user_id: user.id,
+    date: today,
+    test_type: testType,
+    score: totalCorrect,
+    total,
+    meta_json: {
+      version: 2,
+      meaning_score: meaningCorrect,
+      listening_score: listeningCorrect,
+      writing_score: writingCorrect,
+      accuracy_percent: Math.round(accuracyPercent * 10) / 10,
+    },
+  };
+  if (testType === "daily" && studyDay != null) insertRow.study_day = studyDay;
+  await supabase.from("test_results").insert(insertRow);
 
-  if (!existing) {
-    const insertRow: Record<string, unknown> = {
-      user_id: user.id,
-      date: today,
-      test_type: testType,
-      score: totalCorrect,
-      total,
-      meta_json: {
-        version: 2,
-        meaning_score: meaningCorrect,
-        listening_score: listeningCorrect,
-        writing_score: writingCorrect,
-        accuracy_percent: Math.round(accuracyPercent * 10) / 10,
-      },
-    };
-    if (testType === "daily" && studyDay != null) insertRow.study_day = studyDay;
-    await supabase.from("test_results").insert(insertRow);
-
-    if (testType === "daily" && studyDay != null) {
-      await tryAdvanceStudyDay(user.id, studyDay);
-    }
+  if (testType === "daily" && studyDay != null) {
+    await tryAdvanceStudyDay(user.id, studyDay);
   }
 
   return NextResponse.json({
@@ -178,6 +165,6 @@ export async function POST(request: Request) {
     writing_score: writingCorrect,
     writing_total: writingTotal,
     review_rows: reviewRows,
-    already_completed: Boolean(existing),
+    already_completed: false,
   });
 }

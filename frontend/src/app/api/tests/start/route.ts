@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
-import { getCurrentStudyDay, getLastCompletedStudyDay } from "@/lib/study-progress";
+import { getCurrentStudyDay, getLastCompletedStudyDay, areFlashcardsDoneForDay } from "@/lib/study-progress";
 import { dayWordRange, weekWordUpto } from "@/lib/study";
 import { buildDailyTest, buildWeeklyTest, buildFinalTest } from "@/lib/test-builder";
 import { supabase } from "@/lib/supabase-server";
+
+const DAILY_TEST_LOCK_MESSAGE = "Complete today's flashcards to unlock the daily test.";
 
 export async function POST(request: Request) {
   let user: { id: number; username: string };
@@ -27,6 +29,13 @@ export async function POST(request: Request) {
 
   if (testType === "daily") {
     const currentDay = await getCurrentStudyDay(user.id);
+    const flashcardsDone = await areFlashcardsDoneForDay(user.id, currentDay);
+    if (!flashcardsDone) {
+      return NextResponse.json(
+        { detail: DAILY_TEST_LOCK_MESSAGE },
+        { status: 400 }
+      );
+    }
     dailyStudyDay = currentDay;
     const [startId, endId] = dayWordRange(currentDay);
     const { data } = await supabase

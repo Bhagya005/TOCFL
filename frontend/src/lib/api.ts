@@ -41,6 +41,7 @@ type ApiOptions = {
 
 /**
  * Authenticated request. Throws on non-2xx or missing token (for protected routes).
+ * On 401, clears token and redirects to login so user can sign in again.
  * Defaults to GET; pass { method: "POST", body } for POST.
  */
 export function api<T>(path: string, options?: ApiOptions): Promise<T> {
@@ -54,15 +55,25 @@ export function api<T>(path: string, options?: ApiOptions): Promise<T> {
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  } else if (typeof window !== "undefined" && path.startsWith("/api/") && !path.startsWith("/api/auth/")) {
+    clearToken();
+    window.location.href = "/login?reason=session";
+    return Promise.reject(new Error("Not logged in. Redirecting to login."));
   }
 
   const method = options?.method ?? "GET";
   const body = options?.body;
 
   return fetch(url, { method, headers, body, credentials: "include" }).then((res) => {
+    if (res.status === 401) {
+      clearToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login?reason=session";
+      }
+      throw new Error("Session expired or invalid. Please log in again.");
+    }
     if (!res.ok) {
-      const message = res.status === 401 ? "Not authenticated" : res.statusText || "Request failed";
-      throw new Error(message);
+      throw new Error(res.statusText || "Request failed");
     }
     return res.json() as Promise<T>;
   });

@@ -31,25 +31,29 @@ export async function setLastCompletedStudyDay(userId: number, day: number): Pro
     .eq("user_id", userId);
 }
 
-/** True if user has at least one user_progress row for every word in this day's range. */
-export async function areFlashcardsDoneForDay(userId: number, day: number): Promise<boolean> {
+/** Number of words in this day's range that the user has studied (have user_progress). */
+export async function getFlashcardsCompletedCountForDay(userId: number, day: number): Promise<number> {
   const [startId, endId] = dayWordRange(day);
-  const expected = endId - startId + 1;
-
   const { data: wordsInRange } = await supabase
     .from("words")
     .select("id")
     .gte("id", startId)
     .lte("id", endId);
   const wordIds = (wordsInRange ?? []).map((r) => r.id);
-  if (wordIds.length === 0) return true;
-
+  if (wordIds.length === 0) return 0;
   const { data: progress } = await supabase
     .from("user_progress")
     .select("word_id")
     .eq("user_id", userId)
     .in("word_id", wordIds);
-  const count = (progress ?? []).length;
+  return (progress ?? []).length;
+}
+
+/** True if user has at least one user_progress row for every word in this day's range. */
+export async function areFlashcardsDoneForDay(userId: number, day: number): Promise<boolean> {
+  const [startId, endId] = dayWordRange(day);
+  const expected = endId - startId + 1;
+  const count = await getFlashcardsCompletedCountForDay(userId, day);
   return count >= expected;
 }
 

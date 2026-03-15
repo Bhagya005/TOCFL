@@ -142,9 +142,22 @@ export default function TestRunPage() {
   }, [testType, answers]);
 
   if (err) {
+    const isDailyLocked =
+      testType === "daily" &&
+      (err.includes("flashcards") || err.includes("unlock"));
     return (
-      <div className="rounded-card bg-red-500/10 border border-red-500/30 p-4 text-red-400">
-        {err}
+      <div className="space-y-4">
+        <Link href="/tests" className="text-amber-400 hover:underline">← Back to Tests</Link>
+        <div
+          className={`rounded-card p-4 ${isDailyLocked ? "bg-slate-700/50 border border-slate-600" : "bg-red-500/10 border border-red-500/30"}`}
+        >
+          <p className={isDailyLocked ? "text-slate-200" : "text-red-400"}>{err}</p>
+          {isDailyLocked && (
+            <Link href="/flashcards" className="mt-3 inline-block text-amber-400 hover:underline">
+              Go to Flashcards →
+            </Link>
+          )}
+        </div>
       </div>
     );
   }

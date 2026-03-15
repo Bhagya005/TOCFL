@@ -33,20 +33,44 @@ export async function GET(request: Request) {
     .eq("user_id", user.id)
     .order("date", { ascending: true });
 
-  const testList = (testRows ?? []).map((r) => {
+  const rows = testRows ?? [];
+  const dailyByDay = new Map<number, { date: string; test_type: string; score: number; total: number; study_day: number }>();
+  const nonDaily: typeof rows = [];
+  rows.forEach((r) => {
     const studyDay = (r as { study_day?: number | null }).study_day;
-    const d = new Date(startDate);
-    const t = new Date(r.date);
-    const dayIndex =
-      studyDay != null ? studyDay : Math.floor((t.getTime() - d.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-    return {
-      date: r.date,
-      test_type: r.test_type,
-      score: r.score,
-      total: r.total,
-      day_index: dayIndex,
-    };
+    if (r.test_type === "daily" && studyDay != null) {
+      const existing = dailyByDay.get(studyDay);
+      if (!existing || r.score > existing.score) {
+        dailyByDay.set(studyDay, {
+          date: r.date,
+          test_type: r.test_type,
+          score: r.score,
+          total: r.total,
+          study_day: studyDay,
+        });
+      }
+    } else {
+      nonDaily.push(r);
+    }
   });
+
+  const dailyBest = Array.from(dailyByDay.values()).sort((a, b) => a.study_day - b.study_day);
+  const testList = [...dailyBest, ...nonDaily]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map((r) => {
+      const studyDay = (r as { study_day?: number | null }).study_day;
+      const d = new Date(startDate);
+      const t = new Date(r.date);
+      const dayIndex =
+        studyDay != null ? studyDay : Math.floor((t.getTime() - d.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+      return {
+        date: r.date,
+        test_type: r.test_type,
+        score: r.score,
+        total: r.total,
+        day_index: dayIndex,
+      };
+    });
 
   return NextResponse.json({
     plan: {

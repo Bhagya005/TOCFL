@@ -79,11 +79,21 @@ export async function GET(request: Request) {
   });
 
   const due = (wordsData ?? []).filter((w) => dueWordIds.has(toWordId(w.id))).sort((a, b) => toWordId(a.id) - toWordId(b.id));
-  const newW = (wordsData ?? []).filter((w) => newWordIds.has(toWordId(w.id))).sort((a, b) => toWordId(a.id) - toWordId(b.id));
+  // Remaining = words in this day's range the user has not studied yet (no user_progress). Ensures resume from next card.
+  const remaining = (wordsData ?? []).filter((w) => newWordIds.has(toWordId(w.id))).sort((a, b) => toWordId(a.id) - toWordId(b.id));
 
-  // Single source of truth: 1) due for review first, 2) fill remaining slots with new words (cap at WORDS_PER_DAY)
   type WordRow = { id: number; character: string | null; pinyin: string | null; meaning: string | null; pos: string | null };
-  const sessionRows: WordRow[] = [...due, ...newW].slice(0, WORDS_PER_DAY);
+  const allInOrder = (wordsData ?? []).slice().sort((a, b) => toWordId(a.id) - toWordId(b.id));
+  const seenIds = new Set([...due, ...remaining].map((r) => toWordId(r.id)));
+  const rest = allInOrder.filter((w) => !seenIds.has(toWordId(w.id)));
+
+  // Today's session (no day param): due first, then REMAINING (not yet studied) in word order. No advance until all 15 done + daily test.
+  // Session resumes from where user stopped (e.g. did 1–5 → next session shows 6–15).
+  // Review previous days (day param set): due + remaining + rest so they can review all words (cap 15).
+  const sessionRows: WordRow[] =
+    dayParam != null && dayParam !== ""
+      ? [...due, ...remaining, ...rest].slice(0, WORDS_PER_DAY)
+      : [...due, ...remaining].slice(0, WORDS_PER_DAY);
 
   const wordDicts = sessionRows.map((r) => ({
     id: toWordId(r.id),
@@ -113,10 +123,13 @@ export async function GET(request: Request) {
   const totalNew = newWordIds.size;
   const count = wordDicts.length;
   const wordsInRange = wordsData?.length ?? 0;
+  const completedInDay = (wordsData ?? []).filter((w) => upMap.has(toWordId(w.id))).length;
 
   return NextResponse.json({
     words: wordDicts,
     count,
+    completed_in_day: completedInDay,
+    words_per_day: WORDS_PER_DAY,
     total_due: totalDue,
     total_new: totalNew,
     total_weak: totalWeak,

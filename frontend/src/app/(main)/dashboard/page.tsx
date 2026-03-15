@@ -72,7 +72,6 @@ export default function DashboardPage() {
   const currentUserRow = user ? leaderboard.find((r) => r.user === user.username) : null;
   const streak = currentUserRow?.streak ?? 0;
   const flashcardsToday = flashcardsMeta?.count ?? 0;
-  const wordsDue = flashcardsMeta?.total_due ?? 0;
   const totalPoints = currentUserRow?.points ?? 0;
 
   const accuracyPercent = summary.accuracy != null ? summary.accuracy * 100 : null;
@@ -102,7 +101,7 @@ export default function DashboardPage() {
             subtitle="of 300 total"
           />
           <StatCard title="Current streak" value={streak} icon="📅" subtitle="days" />
-          <StatCard title="Words due for review" value={wordsDue} icon="🧠" subtitle="in today's range" />
+          <StatCard title="Flashcards today" value={flashcardsToday} icon="🧠" subtitle="available to study" />
           <StatCard title="Total points" value={totalPoints} icon="🏆" subtitle="leaderboard" />
         </div>
       </section>

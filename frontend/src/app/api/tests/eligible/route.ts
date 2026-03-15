@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
-import { getCurrentStudyDay, getLastCompletedStudyDay } from "@/lib/study-progress";
-import { dayWordRange, weekWordUpto } from "@/lib/study";
+import { getCurrentStudyDay, getLastCompletedStudyDay, areFlashcardsDoneForDay, getFlashcardsCompletedCountForDay } from "@/lib/study-progress";
+import { dayWordRange, weekWordUpto, WORDS_PER_DAY } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
+
+const DAILY_TEST_LOCK_MESSAGE = "Complete today's flashcards to unlock the daily test.";
 
 export async function GET(request: Request) {
   let user: { id: number; username: string };
@@ -19,6 +21,18 @@ export async function GET(request: Request) {
 
   if (testType === "daily") {
     const currentDay = await getCurrentStudyDay(user.id);
+    const flashcardsDone = await areFlashcardsDoneForDay(user.id, currentDay);
+    if (!flashcardsDone) {
+      const completedInDay = await getFlashcardsCompletedCountForDay(user.id, currentDay);
+      return NextResponse.json({
+        can_start: false,
+        message: DAILY_TEST_LOCK_MESSAGE,
+        test_type: "daily",
+        current_day: currentDay,
+        flashcards_completed: completedInDay,
+        words_per_day: WORDS_PER_DAY,
+      });
+    }
     const [startId, endId] = dayWordRange(currentDay);
     const { data: words } = await supabase
       .from("words")
@@ -48,6 +62,7 @@ export async function GET(request: Request) {
       eligible,
       seed,
       test_type: "daily",
+      current_day: currentDay,
     });
   }
 

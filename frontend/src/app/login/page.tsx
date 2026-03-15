@@ -1,17 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { login, register, type User } from "@/lib/api";
+import { login, register } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "session") {
+      setMessage("Your session expired or you weren’t logged in. Please log in again.");
+    }
+  }, [searchParams]);
 
   const n = (s: string) => s.trim().normalize("NFC");
 
@@ -48,6 +55,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-lg bg-gray-800 p-6 shadow-xl">
         <h1 className="text-2xl font-bold text-center mb-6">TOCFL A1 Study</h1>
+        {message && <p className="text-amber-400 text-sm text-center mb-4">{message}</p>}
         <p className="text-gray-400 text-base font-medium text-center mb-6">Create up to 5 users. Each has separate progress.</p>
         <div className="flex gap-2 mb-6">
           <button
