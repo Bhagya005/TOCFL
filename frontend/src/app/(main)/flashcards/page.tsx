@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 type FlashcardsData = {
   words: FlashcardWord[];
+  count: number;
   total_due: number;
   total_new: number;
   total_weak: number;
@@ -73,7 +74,7 @@ export default function FlashcardsPage() {
         <h1 className="text-2xl font-bold text-slate-100">Flashcards</h1>
         <EmptyState
           title="No flashcards for this day"
-          description="No flashcards are due for review in this range."
+          description="No words due for review and no new words in this day's range."
           icon="🃏"
         />
       </div>

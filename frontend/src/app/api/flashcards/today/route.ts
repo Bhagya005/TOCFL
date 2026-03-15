@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { getOrSetStartDate } from "@/lib/db";
-import { dayWordRange } from "@/lib/study";
+import { dayWordRange, WORDS_PER_DAY } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
@@ -54,25 +53,21 @@ export async function GET(request: Request) {
     if (!wp) newWordIds.add(wid);
   });
 
-  const weak = (wordsData ?? []).filter((w) => weakWordIds.has(w.id));
-  const due = (wordsData ?? []).filter((w) => dueWordIds.has(w.id));
-  const newW = (wordsData ?? []).filter((w) => newWordIds.has(w.id));
+  const due = (wordsData ?? []).filter((w) => dueWordIds.has(w.id)).sort((a, b) => a.id - b.id);
+  const newW = (wordsData ?? []).filter((w) => newWordIds.has(w.id)).sort((a, b) => a.id - b.id);
 
+  // Single source of truth: 1) due for review first, 2) fill remaining slots with new words (cap at WORDS_PER_DAY)
   type WordRow = { id: number; character: string | null; pinyin: string | null; meaning: string | null; pos: string | null };
-  const seen = new Map<number, WordRow>();
-  [...weak, ...due, ...newW].forEach((r) => {
-    if (!seen.has(r.id)) seen.set(r.id, r);
-  });
-  const words = Array.from(seen.values()).sort((a, b) => a.id - b.id);
+  const sessionRows: WordRow[] = [...due, ...newW].slice(0, WORDS_PER_DAY);
 
-  const wordDicts = words.map((r) => ({
+  const wordDicts = sessionRows.map((r) => ({
     id: r.id,
     character: r.character,
     pinyin: r.pinyin ?? "",
     meaning: r.meaning ?? "",
   }));
 
-  const ids = wordDicts.slice(0, 20).map((w) => w.id);
+  const ids = wordDicts.map((w) => w.id);
   const { data: exRows } = await supabase
     .from("examples")
     .select("word_id, sentence, pinyin, translation")
@@ -94,6 +89,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     words: wordDicts,
+    count: wordDicts.length,
     total_due: totalDue,
     total_new: totalNew,
     total_weak: totalWeak,

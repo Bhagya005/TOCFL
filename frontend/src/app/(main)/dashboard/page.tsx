@@ -16,7 +16,7 @@ type DashboardData = {
 
 type LeaderboardRow = { rank: number; user: string; points: number; streak: number; words_learned: number; avg_test: string };
 
-type FlashcardsMeta = { total_due: number; total_new: number; total_weak: number };
+type FlashcardsMeta = { count: number; total_due: number; total_new: number; total_weak: number };
 
 export default function DashboardPage() {
   const user = useUser();
@@ -36,7 +36,7 @@ export default function DashboardPage() {
       })
       .then((data) => {
         const day = data?.plan?.current_day ?? 1;
-        return api<{ total_due: number; total_new: number; total_weak: number }>(
+        return api<FlashcardsMeta>(
           `/api/flashcards/today?day=${day}`
         ).then((meta) => {
           if (!cancelled) setFlashcardsMeta(meta);
@@ -75,6 +75,7 @@ export default function DashboardPage() {
   const { plan, summary, test_results } = dashboard;
   const currentUserRow = user ? leaderboard.find((r) => r.user === user.username) : null;
   const streak = currentUserRow?.streak ?? 0;
+  const flashcardsToday = flashcardsMeta?.count ?? 0;
   const wordsDue = flashcardsMeta?.total_due ?? 0;
   const totalPoints = currentUserRow?.points ?? 0;
 
@@ -199,7 +200,7 @@ export default function DashboardPage() {
       <section>
         <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Today&apos;s tasks</h2>
         <ul className="card p-4 md:p-6 list-disc list-inside text-slate-300 space-y-2">
-          <li>Flashcards: Day {plan.current_day} (words up to {plan.unlocked_upto_word_id})</li>
+          <li>Flashcards today: {flashcardsToday}</li>
           <li>Daily test: 35 questions</li>
         </ul>
       </section>
