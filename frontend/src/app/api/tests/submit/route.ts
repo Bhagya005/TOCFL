@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { normalizePinyinForComparison } from "@/lib/pinyin";
-import { getCurrentStudyDay, tryAdvanceStudyDay } from "@/lib/study-progress";
+import { getCurrentStudyDay } from "@/lib/study-progress";
 import { supabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
@@ -150,9 +150,8 @@ export async function POST(request: Request) {
   if (testType === "daily" && studyDay != null) insertRow.study_day = studyDay;
   await supabase.from("test_results").insert(insertRow);
 
-  if (testType === "daily" && studyDay != null) {
-    await tryAdvanceStudyDay(user.id, studyDay);
-  }
+  // Do not advance study day on submit so the user can retake the daily test the same day.
+  // Advancement happens in getCurrentStudyDay via syncLastCompletedFromPastDays (next calendar day).
 
   return NextResponse.json({
     total_correct: totalCorrect,

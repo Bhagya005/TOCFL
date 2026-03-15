@@ -17,8 +17,43 @@ export async function getLastCompletedStudyDay(userId: number): Promise<number> 
   return Math.max(0, Math.min(TOTAL_DAYS, n));
 }
 
+/**
+ * Advance last_completed for any day that was fully completed (flashcards + test) on a previous calendar day.
+ * Called so we advance "tomorrow" not on submit, allowing retakes the same day.
+ */
+export async function syncLastCompletedFromPastDays(userId: number): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  let last = await getLastCompletedStudyDay(userId);
+  let advanced: boolean;
+  do {
+    advanced = false;
+    const day = last + 1;
+    if (day > TOTAL_DAYS) break;
+    const [flashcardsDone, testDone] = await Promise.all([
+      areFlashcardsDoneForDay(userId, day),
+      isDailyTestDoneForDay(userId, day),
+    ]);
+    if (!flashcardsDone || !testDone) break;
+    const { data: testRow } = await supabase
+      .from("test_results")
+      .select("date")
+      .eq("user_id", userId)
+      .eq("test_type", "daily")
+      .eq("study_day", day)
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+    if (testRow?.date && testRow.date < today) {
+      await setLastCompletedStudyDay(userId, day);
+      last = day;
+      advanced = true;
+    }
+  } while (advanced);
+}
+
 /** Next study day to work on (1–20). Vocabulary for this day is loaded for flashcards and daily test. */
 export async function getCurrentStudyDay(userId: number): Promise<number> {
+  await syncLastCompletedFromPastDays(userId);
   const last = await getLastCompletedStudyDay(userId);
   return Math.min(TOTAL_DAYS, last + 1);
 }
