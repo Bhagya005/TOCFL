@@ -31,20 +31,13 @@ export async function refreshUserStats(userId: number) {
       ? tests.reduce((a, t) => a + (Number(t.total) ? Number(t.score) / Number(t.total) : 0), 0) / tests.length
       : 0;
 
-  const { data: lastSeenRows } = await supabase
-    .from("user_progress")
-    .select("last_seen")
-    .eq("user_id", userId)
-    .not("last_seen", "is", null);
+  // Streak = consecutive days (including today) with at least one test completed.
   const { data: testDateRows } = await supabase
     .from("test_results")
     .select("date")
     .eq("user_id", userId);
 
   const activeDates = new Set<string>();
-  (lastSeenRows ?? []).forEach((r) => {
-    if (r.last_seen) activeDates.add(String(r.last_seen).slice(0, 10));
-  });
   (testDateRows ?? []).forEach((r) => activeDates.add(r.date));
 
   const sorted = Array.from(activeDates).sort().reverse();

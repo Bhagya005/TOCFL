@@ -15,6 +15,16 @@ const TONE_MARKS: Record<string, string[]> = {
 
 const VOWELS = new Set("aeiouü");
 
+/** Map tone-mark vowels to base vowels for comparison (strip tones). */
+const TONE_MARK_TO_BASE: Record<string, string> = {
+  ā: "a", á: "a", ǎ: "a", à: "a",
+  ē: "e", é: "e", ě: "e", è: "e",
+  ī: "i", í: "i", ǐ: "i", ì: "i",
+  ō: "o", ó: "o", ǒ: "o", ò: "o",
+  ū: "u", ú: "u", ǔ: "u", ù: "u",
+  ǖ: "ü", ǘ: "ü", ǚ: "ü", ǜ: "ü",
+};
+
 /**
  * Find which vowel index in the syllable gets the tone mark (pinyin rules).
  * - If 'a' or 'e' exists, mark the first of those.
@@ -87,21 +97,30 @@ export function numbersToToneMarks(pinyin: string): string {
 }
 
 /**
- * Normalize pinyin for strict comparison: both formats → tone marks, lower case, no spaces.
- * - User input with tone numbers (wo3, peng2you3) is converted to tone marks (wǒ, péngyǒu).
- * - Dataset pinyin in either numbers or tone marks is normalized to the same form.
- * - Tones must match exactly (wo3 = wǒ is correct; wo2 ≠ wǒ is incorrect).
- * Returns NFC-normalized string for consistent comparison across devices.
+ * Convert tone-mark vowels to base vowels (ā→a, ē→e, etc.) so comparison is tone-agnostic.
+ */
+export function stripToneMarks(pinyin: string): string {
+  if (!pinyin || typeof pinyin !== "string") return "";
+  let s = pinyin;
+  for (const [accented, base] of Object.entries(TONE_MARK_TO_BASE)) {
+    s = s.split(accented).join(base);
+  }
+  return s;
+}
+
+/**
+ * Normalize pinyin for comparison:
+ * 1. Convert tone numbers in input to tone marks.
+ * 2. Strip tone marks (convert to base vowels) on both user and dataset side.
+ * 3. Lower case, no spaces, NFC.
+ * Correct answer in the report is shown as original dataset pinyin (with tone marks), not this normalized form.
  */
 export function normalizePinyinForComparison(input: string): string {
   if (!input || typeof input !== "string") return "";
   const trimmed = input.trim().toLowerCase().replace(/\s/g, "");
   if (!trimmed) return "";
-  let result: string;
-  if (/[1-4]/.test(trimmed)) {
-    result = numbersToToneMarks(trimmed).toLowerCase();
-  } else {
-    result = trimmed;
-  }
-  return result.normalize("NFC");
+  const withToneMarks = /[1-4]/.test(trimmed)
+    ? numbersToToneMarks(trimmed).toLowerCase()
+    : trimmed;
+  return stripToneMarks(withToneMarks).normalize("NFC");
 }

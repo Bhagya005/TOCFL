@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { getCurrentStudyDay, tryAdvanceStudyDay } from "@/lib/study-progress";
-import { dayWordRange } from "@/lib/study";
 import { supabase } from "@/lib/supabase-server";
 
 function nextReview(score: number): string {
@@ -88,11 +86,8 @@ export async function POST(request: Request) {
     });
   }
 
-  const currentDay = await getCurrentStudyDay(user.id);
-  const [startId, endId] = dayWordRange(currentDay);
-  if (wordId >= startId && wordId <= endId) {
-    await tryAdvanceStudyDay(user.id, currentDay);
-  }
+  // Day progression is calendar-based only (see syncLastCompletedFromPastDays in study-progress).
+  // Completing 15 flashcards does not advance the day; next day unlocks on calendar change.
 
   return NextResponse.json({ ok: true });
 }
