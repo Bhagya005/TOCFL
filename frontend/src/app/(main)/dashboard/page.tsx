@@ -13,6 +13,8 @@ type DashboardData = {
   start_date: string;
   summary: { known_words: number; attempts: number; correct: number; accuracy: number | null };
   test_results: { date: string; test_type: string; score: number; total: number }[];
+  streak?: number;
+  total_points?: number;
 };
 
 type LeaderboardRow = { rank: number; user: string; points: number; streak: number; words_learned: number; avg_test: string };
@@ -68,11 +70,10 @@ export default function DashboardPage() {
 
   if (!dashboard) return null;
 
-  const { plan, summary, test_results } = dashboard;
-  const currentUserRow = user ? leaderboard.find((r) => r.user === user.username) : null;
-  const streak = currentUserRow?.streak ?? 0;
+  const { plan, summary, test_results, streak: dashboardStreak, total_points: dashboardPoints } = dashboard;
+  const streak = dashboardStreak ?? 0;
   const flashcardsToday = flashcardsMeta?.count ?? 0;
-  const totalPoints = currentUserRow?.points ?? 0;
+  const totalPoints = dashboardPoints ?? 0;
 
   const accuracyPercent = summary.accuracy != null ? summary.accuracy * 100 : null;
   const last14 = test_results.slice(-14).reverse();

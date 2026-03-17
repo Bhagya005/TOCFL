@@ -27,6 +27,12 @@ export async function GET(request: Request) {
   const correct = (progressRows ?? []).reduce((s, r) => s + Number(r.correct ?? 0), 0);
   const accuracy = attempts > 0 ? correct / attempts : null;
 
+  const { data: statsRow } = await supabase
+    .from("user_stats")
+    .select("streak_days, total_points")
+    .eq("user_id", user.id)
+    .single();
+
   const { data: testRows } = await supabase
     .from("test_results")
     .select("date, test_type, score, total, study_day")
@@ -85,5 +91,7 @@ export async function GET(request: Request) {
       accuracy,
     },
     test_results: testList,
+    streak: Number(statsRow?.streak_days ?? 0),
+    total_points: Number(statsRow?.total_points ?? 0),
   });
 }
