@@ -77,14 +77,6 @@ export default function DashboardPage() {
 
   const accuracyPercent = summary.accuracy != null ? summary.accuracy * 100 : null;
   const last14 = test_results.slice(-14).reverse();
-  const byDate = test_results.reduce<Record<string, { score: number; total: number }>>((acc, r) => {
-    if (!acc[r.date]) acc[r.date] = { score: 0, total: 0 };
-    acc[r.date].score += r.score;
-    acc[r.date].total += r.total;
-    return acc;
-  }, {});
-  const dates = Object.keys(byDate).sort();
-  const maxScore = Math.max(...dates.map((d) => byDate[d].total), 1);
 
   const heatmapDates = new Set(test_results.map((r) => r.date));
 
@@ -107,37 +99,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
-        <div className="card p-4 md:p-6 min-w-0">
-          <h3 className="text-base font-semibold text-slate-200 mb-4">Words learned per day (tests)</h3>
-          {dates.length === 0 ? (
-            <EmptyState
-              title="No test data yet"
-              description="Complete daily tests to see activity."
-              icon="📊"
-            />
-          ) : (
-            <div className="space-y-2">
-              {dates.slice(-7).map((d) => {
-                const { score, total } = byDate[d];
-                const pct = total > 0 ? (total / maxScore) * 100 : 0;
-                return (
-                  <div key={d} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-20 shrink-0">{d}</span>
-                    <div className="flex-1 h-6 rounded bg-slate-700 overflow-hidden">
-                      <div
-                        className="h-full bg-amber-500/80 rounded transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-slate-400 w-16 text-right">{total} q</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
+      <section>
         <div className="card p-4 md:p-6 min-w-0">
           <h3 className="text-base font-semibold text-slate-200 mb-4">Accuracy trend</h3>
           {accuracyPercent != null ? (
@@ -165,7 +127,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="min-w-0">
-        <h3 className="text-base font-semibold text-slate-200 mb-4">Study heatmap (last 12 weeks)</h3>
+        <h3 className="text-base font-semibold text-slate-200 mb-4">Study heatmap (last 4 weeks)</h3>
         <div className="card p-4 md:p-6 overflow-hidden">
           {heatmapDates.size === 0 ? (
             <EmptyState
@@ -174,10 +136,10 @@ export default function DashboardPage() {
               icon="🔥"
             />
           ) : (
-            <div className="grid grid-cols-12 gap-1">
-              {Array.from({ length: 84 }, (_, i) => {
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: 28 }, (_, i) => {
                 const d = new Date();
-                d.setDate(d.getDate() - (83 - i));
+                d.setDate(d.getDate() - (27 - i));
                 const key = d.toISOString().slice(0, 10);
                 const active = heatmapDates.has(key);
                 return (
