@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { refreshUserStats } from "@/lib/db";
 import { supabase } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
@@ -11,12 +10,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ detail: "Not authenticated" }, { status: 401 });
   }
 
-  const { data: users } = await supabase.from("users").select("id");
-  const userIds = (users ?? []).map((u) => u.id);
-  for (const id of userIds) {
-    await refreshUserStats(id);
-  }
-
+  // Read user_stats only; do not refresh here (would overwrite manual edits and recompute streak to 0).
+  // Stats are updated when a user submits a test (refreshUserStats in submit route).
   const { data: rows } = await supabase
     .from("user_stats")
     .select("user_id, username, streak_days, words_learned, tests_taken, avg_test_score, total_points")
