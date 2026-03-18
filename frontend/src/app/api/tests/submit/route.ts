@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { refreshUserStats } from "@/lib/db";
-import { normalizePinyinForExactMatch } from "@/lib/pinyin";
 import { getCurrentStudyDay } from "@/lib/study-progress";
+
+/** For writing test: compare using only trim + collapse spaces. No character transformation. */
+function writingCompareValue(s: string): string {
+  return s.trim().replace(/\s+/g, " ").trim();
+}
 import { supabase } from "@/lib/supabase-server";
 
 export async function POST(request: Request) {
@@ -98,18 +102,16 @@ export async function POST(request: Request) {
       });
     } else {
       writingTotal++;
-      const correctPinyinDisplay = String(q.correct_pinyin_display ?? "").trim();
+      const correctPinyin =
+        String(q.correct_pinyin ?? q.correct_pinyin_display ?? q.correct_pinyin_numbers ?? "").trim();
       const userText =
         typeof userAns === "string" && String(userAns).trim()
           ? String(userAns).trim()
           : "(no answer)";
-      // Exact match: compare user tone-mark input with dataset pinyin (tone marks).
-      const normalizedUser = normalizePinyinForExactMatch(userText);
-      const normalizedCorrect = normalizePinyinForExactMatch(correctPinyinDisplay);
       const isCorrect = Boolean(
-        normalizedUser &&
-        normalizedCorrect &&
-        normalizedUser === normalizedCorrect
+        correctPinyin &&
+        userText &&
+        writingCompareValue(userText) === writingCompareValue(correctPinyin)
       );
       if (isCorrect) writingCorrect++;
       reviewRows.push({
@@ -117,7 +119,7 @@ export async function POST(request: Request) {
         Section: "Writing",
         Question: `English: ${String(q.prompt ?? "")}`,
         "Your answer": userText,
-        "Correct answer": correctPinyinDisplay,
+        "Correct answer": correctPinyin,
         Result: isCorrect ? "Correct" : "Incorrect",
       });
     }

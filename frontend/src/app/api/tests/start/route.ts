@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getOrSetStartDate } from "@/lib/db";
 import { getCurrentStudyDay, getLastCompletedStudyDay, areFlashcardsDoneForDay } from "@/lib/study-progress";
 import { dayWordRange, weekWordUpto } from "@/lib/study";
-import { buildDailyTest, buildWeeklyTest, buildFinalTest } from "@/lib/test-builder";
+import { buildTestWithCount, TEST_LIMITS } from "@/lib/test-builder";
 import { supabase } from "@/lib/supabase-server";
 
 const DAILY_TEST_LOCK_MESSAGE = "Complete today's flashcards to unlock the daily test.";
@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const testType = (body?.test_type ?? "daily").toLowerCase();
+  const testType = (body?.test_type ?? "daily").toLowerCase() as keyof typeof TEST_LIMITS;
+  const requestedCount = typeof body?.question_count === "number" ? Math.floor(body.question_count) : null;
 
   const startDateStr = await getOrSetStartDate(user.id);
   const today = new Date().toISOString().slice(0, 10);
@@ -120,13 +121,21 @@ export async function POST(request: Request) {
     .eq("test_type", testType)
     .single();
 
+  const limits = TEST_LIMITS[testType] ?? TEST_LIMITS.daily;
+  const questionCount = Math.min(
+    Math.max(1, requestedCount ?? limits.default),
+    limits.max
+  );
+
   let questions: Record<string, unknown>[];
-  if (cached?.payload_json && Array.isArray((cached.payload_json as { questions?: unknown[] }).questions)) {
-    questions = (cached.payload_json as { questions: Record<string, unknown>[] }).questions;
+  const cachedQuestions = (cached?.payload_json as { questions?: unknown[] } | null)?.questions;
+  const useCache =
+    Array.isArray(cachedQuestions) && cachedQuestions.length === questionCount;
+
+  if (useCache) {
+    questions = cachedQuestions as Record<string, unknown>[];
   } else {
-    if (testType === "daily") questions = buildDailyTest(words, seed);
-    else if (testType === "weekly") questions = buildWeeklyTest(words, seed);
-    else questions = buildFinalTest(words, seed);
+    questions = buildTestWithCount(words, seed, questionCount, testType);
     const payload: Record<string, unknown> = { questions };
     if (dailyStudyDay != null) payload.study_day = dailyStudyDay;
     await supabase.from("generated_tests").upsert(

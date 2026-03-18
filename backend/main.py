@@ -30,7 +30,6 @@ from utils.review_queue import get_due_words as rq_get_due_words
 from utils.review_queue import get_new_words as rq_get_new_words
 from utils.review_queue import get_weak_words as rq_get_weak_words
 from utils.spaced_repetition import update_word_progress
-from utils.pinyin import numbers_to_tone_marks
 from progress.analytics import add_day_index, progress_summary
 
 # Test builders
@@ -488,18 +487,20 @@ def tests_submit(
             })
         else:
             writing_total += 1
-            correct_pinyin_display = str(q.get("correct_pinyin_display", "")).strip()
+            correct_pinyin = (
+                str(q.get("correct_pinyin", "") or q.get("correct_pinyin_display", "") or q.get("correct_pinyin_numbers", "") or "").strip()
+            )
             user_text = user_ans if isinstance(user_ans, str) and str(user_ans).strip() else "(no answer)"
-            user_raw = str(user_ans).strip().lower().replace(" ", "") if isinstance(user_ans, str) else ""
-            correct_raw = correct_pinyin_display.strip().lower().replace(" ", "")
-            is_correct = bool(user_raw and correct_raw and user_raw == correct_raw)
+            user_compare = " ".join(str(user_ans or "").strip().split()) if isinstance(user_ans, str) else ""
+            correct_compare = " ".join(correct_pinyin.split())
+            is_correct = bool(correct_pinyin and user_compare and user_compare == correct_compare)
             if is_correct:
                 writing_correct += 1
             review_rows.append({
                 "Q#": i + 1, "Section": "Writing",
                 "Question": f"English: {q.get('prompt', '')}",
                 "Your answer": user_text,
-                "Correct answer": correct_pinyin_display,
+                "Correct answer": correct_pinyin,
                 "Result": "Correct" if is_correct else "Incorrect",
             })
 

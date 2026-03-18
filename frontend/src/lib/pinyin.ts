@@ -1,7 +1,6 @@
 /**
- * Pinyin utilities for the writing test.
- * numbersToToneMarks: converts dataset numbered pinyin (e.g. lao3shi1) to tone marks for display and validation.
- * normalizePinyinForExactMatch: normalizes user tone-mark input for exact comparison with correct answer.
+ * Pinyin utilities (e.g. for display elsewhere).
+ * Writing test uses raw database pinyin only; no normalization or conversion.
  */
 
 const TONE_MARKS: Record<string, string[]> = {
@@ -108,11 +107,3 @@ export function stripToneMarks(pinyin: string): string {
   return s;
 }
 
-/**
- * Normalize pinyin for exact-match comparison (writing test).
- * User input and correct answer are both in tone-mark form; compare after trim, lowercase, no spaces, NFC.
- */
-export function normalizePinyinForExactMatch(input: string): string {
-  if (!input || typeof input !== "string") return "";
-  return input.trim().toLowerCase().replace(/\s/g, "").normalize("NFC");
-}

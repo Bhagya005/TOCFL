@@ -21,24 +21,24 @@ const TESTS = [
     type: "daily",
     href: "/tests/daily",
     title: "Daily Test",
-    questions: 35,
-    description: "Words learned today.",
+    maxQuestions: 35,
+    description: "Words learned today. Choose 1–35 questions.",
     icon: "📅",
   },
   {
     type: "weekly",
     href: "/tests/weekly",
     title: "Weekly Test",
-    questions: 120,
-    description: "Words learned this week.",
+    maxQuestions: 150,
+    description: "Words learned this week. Choose 1–150 questions.",
     icon: "📆",
   },
   {
     type: "final",
     href: "/tests/final",
     title: "Final Test",
-    questions: 200,
-    description: "All 300 words.",
+    maxQuestions: 300,
+    description: "All 300 words. Choose 1–300 questions.",
     icon: "🏁",
   },
 ] as const;
@@ -79,7 +79,7 @@ export default function TestsPage() {
     <div className="space-y-6 sm:space-y-8 min-w-0">
       <h1 className="text-xl sm:text-2xl font-bold text-slate-100">Tests</h1>
       <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
-        {TESTS.map(({ type, href, title, questions, description, icon }) => {
+        {TESTS.map(({ type, href, title, maxQuestions, description, icon }) => {
           const e = eligibility[type] ?? { can_start: false, message: "Loading..." };
           const isLocked = type === "daily" && !e.can_start;
           const progress =
@@ -101,7 +101,7 @@ export default function TestsPage() {
               </div>
               <h2 className="text-lg font-semibold text-slate-100 mb-2">{title}</h2>
               <p className="text-base font-medium text-slate-400 mb-4 flex-1">{description}</p>
-              <p className="text-sm font-medium text-slate-500 mb-4">{questions} questions</p>
+              <p className="text-sm font-medium text-slate-500 mb-4">Up to {maxQuestions} questions</p>
               {e.can_start ? (
                 <Link href={href} className="btn-primary text-center">
                   Start

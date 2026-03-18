@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import QuizCard from "@/components/ui/QuizCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ToneKeyboard from "@/components/ToneKeyboard";
+import { TEST_LIMITS, getSectionCounts, type TestType } from "@/lib/test-builder";
 
 type Question = {
   section: string;
@@ -14,7 +15,7 @@ type Question = {
   options?: string[];
   answer_index?: number;
   text_to_play?: string;
-  correct_pinyin_numbers?: string;
+  correct_pinyin?: string;
   display_cn?: string;
   display_py?: string;
 };
@@ -83,9 +84,9 @@ function AudioPlayer({ text }: { text: string }) {
 }
 
 const TITLES: Record<string, string> = {
-  daily: "Daily Test (35 questions)",
-  weekly: "Weekly Test (120 questions)",
-  final: "Final Test (200 questions)",
+  daily: "Daily Test",
+  weekly: "Weekly Test",
+  final: "Final Test",
 };
 
 export default function TestRunPage() {
@@ -110,25 +111,32 @@ export default function TestRunPage() {
   } | null>(null);
   const [err, setErr] = useState("");
 
-  const loadTest = useCallback(() => {
+  const limits = TEST_LIMITS[testType as TestType] ?? TEST_LIMITS.daily;
+  const [questionCount, setQuestionCount] = useState(limits.default);
+  const [testStarted, setTestStarted] = useState(false);
+
+  const loadTest = useCallback((count: number) => {
     setLoading(true);
+    setErr("");
     setResult(null);
     api<{ questions: Question[] }>("/api/tests/start", {
       method: "POST",
-      body: JSON.stringify({ test_type: testType }),
+      body: JSON.stringify({ test_type: testType, question_count: count }),
     })
       .then((res) => {
         setQuestions(res.questions);
         setAnswers({});
         setIndex(0);
+        setTestStarted(true);
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
   }, [testType]);
 
   useEffect(() => {
-    if (["daily", "weekly", "final"].includes(testType)) loadTest();
-  }, [testType, loadTest]);
+    setQuestionCount(limits.default);
+    setTestStarted(false);
+  }, [testType, limits.default]);
 
   const submitTest = useCallback(async () => {
     const ans: Record<string, number | string> = {};
@@ -256,7 +264,58 @@ export default function TestRunPage() {
     );
   }
 
-  if (questions.length === 0) return null;
+  if (questions.length === 0) {
+    const { nMeaning, nListening, nWriting } = getSectionCounts(questionCount, testType as TestType);
+    return (
+      <div className="space-y-6 min-w-0">
+        <div className="flex items-center justify-end">
+          <Link href="/tests" className="text-amber-400 hover:underline text-base font-medium">← Back to Tests</Link>
+        </div>
+        <div className="card p-6 space-y-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100">{TITLES[testType]}</h1>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-base font-medium text-slate-300 block mb-2">Number of questions</span>
+              <div className="flex flex-wrap items-center gap-4">
+                <input
+                  type="range"
+                  min={1}
+                  max={limits.max}
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(Number(e.target.value))}
+                  className="flex-1 min-w-[120px] h-3 rounded-full accent-amber-500 bg-slate-700"
+                  aria-label="Question count"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={limits.max}
+                  value={questionCount}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!Number.isNaN(v)) setQuestionCount(Math.min(limits.max, Math.max(1, Math.floor(v))));
+                  }}
+                  className="input-field w-20 text-center"
+                  aria-label="Question count (number)"
+                />
+              </div>
+            </label>
+            <p className="text-sm text-slate-500">
+              Selected: <strong className="text-slate-300">{questionCount}</strong> questions
+              (Meaning: {nMeaning}, Listening: {nListening}, Writing: {nWriting})
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => loadTest(questionCount)}
+            className="btn-primary w-full sm:w-auto"
+          >
+            Start Test
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const q = questions[index];
   const isLast = index >= questions.length - 1;
@@ -335,7 +394,7 @@ export default function TestRunPage() {
         <Link href="/tests" className="text-amber-400 hover:underline text-base font-medium">← Back to Tests</Link>
       </div>
       <QuizCard
-        title={TITLES[testType]}
+        title={`${TITLES[testType]} (${questions.length} questions)`}
         questionProgress={`Question ${index + 1} / ${questions.length}`}
         progressPercent={progressPercent}
         footer={

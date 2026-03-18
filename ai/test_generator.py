@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from openai import OpenAI
-from utils.pinyin import numbers_to_tone_marks
 
 
 QuestionType = Literal[
@@ -185,13 +184,13 @@ def _build_listening_question(
 
     text_to_play = sentence if sentence else char
 
-    # For review: display the exact Chinese text plus its pinyin.
+    # For review: display the exact Chinese text plus its pinyin (as stored).
     if sentence:
         display_cn = sentence
-        display_py = numbers_to_tone_marks(sentence_pinyin_raw) if sentence_pinyin_raw else ""
+        display_py = sentence_pinyin_raw
     else:
         display_cn = char
-        display_py = numbers_to_tone_marks(pinyin_raw) if pinyin_raw else ""
+        display_py = pinyin_raw
     correct = char
     distractors = _sample_unique(
         [str(x.get("character", "")).strip() for x in pool],
@@ -238,17 +237,11 @@ def _build_writing_question(w: dict[str, Any]) -> dict[str, Any] | None:
     pinyin_raw = str(w.get("pinyin", "") or "").strip()
     if not meaning or not char:
         return None
-    # Use the raw numbered pinyin from the vocab as the canonical answer
-    # (e.g. peng2you3). Writing test grading expects an exact match
-    # modulo case and whitespace.
-    correct_pinyin_numbers = pinyin_raw
-    # For reports, also store a tone-mark display form derived from 漢拼.
-    correct_pinyin_display = numbers_to_tone_marks(pinyin_raw) if pinyin_raw else ""
+    # Use the exact pinyin from the database as-is (no conversion).
     return {
         "section": "writing",
         "prompt": meaning,
-        "correct_pinyin_numbers": correct_pinyin_numbers.strip(),
-        "correct_pinyin_display": correct_pinyin_display.strip(),
+        "correct_pinyin": pinyin_raw,
         "correct_character": char,
         "word_id": wid,
     }

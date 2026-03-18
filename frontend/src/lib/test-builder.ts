@@ -1,4 +1,3 @@
-import { numbersToToneMarks } from "@/lib/pinyin";
 
 type Word = {
   id: number;
@@ -105,7 +104,7 @@ export function buildThreeSectionTest(
       section: "listening",
       text_to_play: textToPlay,
       display_cn: displayCn,
-      display_py: displayPy ? numbersToToneMarks(displayPy) : "",
+      display_py: displayPy,
       options,
       answer_index: answerIndex,
       word_id: w.id,
@@ -121,14 +120,65 @@ export function buildThreeSectionTest(
     questions.push({
       section: "writing",
       prompt: meaning,
-      correct_pinyin_numbers: pinyinRaw,
-      correct_pinyin_display: pinyinRaw ? numbersToToneMarks(pinyinRaw) : "",
+      correct_pinyin: pinyinRaw,
       correct_character: char,
       word_id: w.id,
     });
   });
 
   return shuffle(questions, rng);
+}
+
+/** Ratio Meaning : Listening : Writing. Daily = 3:2:2, Weekly/Final = 2:1:1 */
+const RATIOS = {
+  daily: [3, 2, 2] as const,
+  weekly: [2, 1, 1] as const,
+  final: [2, 1, 1] as const,
+} as const;
+
+export const TEST_LIMITS = {
+  daily: { max: 35, default: 35 },
+  weekly: { max: 150, default: 120 },
+  final: { max: 300, default: 200 },
+} as const;
+
+export type TestType = keyof typeof RATIOS;
+
+/**
+ * Split total question count by section ratio. Distributes remainder in order: Meaning → Listening → Writing.
+ */
+export function getSectionCounts(
+  total: number,
+  testType: TestType
+): { nMeaning: number; nListening: number; nWriting: number } {
+  const [a, b, c] = RATIOS[testType];
+  const parts = a + b + c;
+  let nMeaning = Math.floor((total * a) / parts);
+  let nListening = Math.floor((total * b) / parts);
+  let nWriting = Math.floor((total * c) / parts);
+  let remainder = total - (nMeaning + nListening + nWriting);
+  if (remainder > 0) {
+    nMeaning += 1;
+    remainder -= 1;
+  }
+  if (remainder > 0) {
+    nListening += 1;
+    remainder -= 1;
+  }
+  if (remainder > 0) {
+    nWriting += 1;
+  }
+  return { nMeaning, nListening, nWriting };
+}
+
+export function buildTestWithCount(
+  words: Word[],
+  seed: number,
+  total: number,
+  testType: TestType
+): Record<string, unknown>[] {
+  const { nMeaning, nListening, nWriting } = getSectionCounts(total, testType);
+  return buildThreeSectionTest(words, nMeaning, nListening, nWriting, seed);
 }
 
 const DAILY = { meaning: 15, listening: 10, writing: 10 };
