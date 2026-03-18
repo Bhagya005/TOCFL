@@ -112,7 +112,7 @@ export default function TestRunPage() {
   const [err, setErr] = useState("");
 
   const limits = TEST_LIMITS[testType as TestType] ?? TEST_LIMITS.daily;
-  const [questionCount, setQuestionCount] = useState(limits.default);
+  const [questionCount, setQuestionCount] = useState<number>(limits.default);
   const [testStarted, setTestStarted] = useState(false);
 
   const loadTest = useCallback((count: number) => {
