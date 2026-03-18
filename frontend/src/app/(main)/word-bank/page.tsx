@@ -61,18 +61,18 @@ export default function WordBankPage() {
   if (weakOnly) words = words.filter((w) => w.weak);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-100">Word Bank</h1>
-      <div className="card p-4 md:p-6">
+    <div className="space-y-6 sm:space-y-8 min-w-0">
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-100">Word Bank</h1>
+      <div className="card p-4 md:p-6 min-w-0">
         <input
           type="text"
           placeholder="Search (character / pinyin / meaning)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="input-field mb-4"
+          className="input-field mb-4 w-full min-w-0"
         />
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
+        <div className="flex flex-wrap gap-3 sm:gap-4">
+          <label className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-300 cursor-pointer min-h-[44px] sm:min-h-0">
             <input
               type="checkbox"
               checked={showLearned}
@@ -81,7 +81,7 @@ export default function WordBankPage() {
             />
             Learned
           </label>
-          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-300 cursor-pointer min-h-[44px] sm:min-h-0">
             <input
               type="checkbox"
               checked={showUnlearned}
@@ -90,7 +90,7 @@ export default function WordBankPage() {
             />
             Unlearned
           </label>
-          <label className="flex items-center gap-2 text-base font-medium text-slate-300 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm sm:text-base font-medium text-slate-300 cursor-pointer min-h-[44px] sm:min-h-0">
             <input
               type="checkbox"
               checked={weakOnly}
@@ -101,7 +101,37 @@ export default function WordBankPage() {
           </label>
         </div>
       </div>
-      <div className="card overflow-hidden">
+
+      {/* Mobile: card list */}
+      <div className="md:hidden space-y-3 min-w-0">
+        {words.length === 0 ? (
+          <div className="card p-6 text-center text-slate-500">No words match your filters.</div>
+        ) : (
+          words.map((w) => (
+            <div
+              key={w.id}
+              className="card p-4 border border-slate-700/50 rounded-button space-y-2"
+            >
+              <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                <span className="text-lg font-semibold text-slate-100">{w.character}</span>
+                <span className="text-sm text-slate-500">#{w.id}</span>
+              </div>
+              <p className="text-slate-300 text-sm">{w.pinyin}</p>
+              <p className="text-slate-200 text-base">{w.meaning}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 pt-1 border-t border-slate-700/50">
+                <span>{w.pos || "—"}</span>
+                <span>{w.learned ? "Learned" : "—"}</span>
+                <span>{w.weak ? "Weak" : ""}</span>
+                <span>Mistakes: {w.mistakes}</span>
+                <span>Attempts: {w.attempts}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block card overflow-hidden min-w-0">
         <div className="overflow-x-auto">
           <table className="w-full text-base">
             <thead>

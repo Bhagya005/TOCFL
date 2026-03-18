@@ -1,7 +1,7 @@
 /**
- * Pinyin normalization for writing test validation.
- * Converts tone numbers (lao3shi1) to tone marks (lǎoshī) so we can compare
- * user input (either format) with the correct answer (stored as numbers).
+ * Pinyin utilities for the writing test.
+ * numbersToToneMarks: converts dataset numbered pinyin (e.g. lao3shi1) to tone marks for display and validation.
+ * normalizePinyinForExactMatch: normalizes user tone-mark input for exact comparison with correct answer.
  */
 
 const TONE_MARKS: Record<string, string[]> = {
@@ -109,18 +109,10 @@ export function stripToneMarks(pinyin: string): string {
 }
 
 /**
- * Normalize pinyin for comparison:
- * 1. Convert tone numbers in input to tone marks.
- * 2. Strip tone marks (convert to base vowels) on both user and dataset side.
- * 3. Lower case, no spaces, NFC.
- * Correct answer in the report is shown as original dataset pinyin (with tone marks), not this normalized form.
+ * Normalize pinyin for exact-match comparison (writing test).
+ * User input and correct answer are both in tone-mark form; compare after trim, lowercase, no spaces, NFC.
  */
-export function normalizePinyinForComparison(input: string): string {
+export function normalizePinyinForExactMatch(input: string): string {
   if (!input || typeof input !== "string") return "";
-  const trimmed = input.trim().toLowerCase().replace(/\s/g, "");
-  if (!trimmed) return "";
-  const withToneMarks = /[1-4]/.test(trimmed)
-    ? numbersToToneMarks(trimmed).toLowerCase()
-    : trimmed;
-  return stripToneMarks(withToneMarks).normalize("NFC");
+  return input.trim().toLowerCase().replace(/\s/g, "").normalize("NFC");
 }

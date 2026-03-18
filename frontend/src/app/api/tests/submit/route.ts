@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { refreshUserStats } from "@/lib/db";
-import { normalizePinyinForComparison } from "@/lib/pinyin";
+import { normalizePinyinForExactMatch } from "@/lib/pinyin";
 import { getCurrentStudyDay } from "@/lib/study-progress";
 import { supabase } from "@/lib/supabase-server";
 
@@ -98,15 +98,14 @@ export async function POST(request: Request) {
       });
     } else {
       writingTotal++;
-      const correctPinyinNumbers = String(q.correct_pinyin_numbers ?? "").trim();
       const correctPinyinDisplay = String(q.correct_pinyin_display ?? "").trim();
       const userText =
         typeof userAns === "string" && String(userAns).trim()
           ? String(userAns).trim()
           : "(no answer)";
-      // Normalize: convert tone numbers → tone marks, then strip to base vowels; compare.
-      const normalizedUser = normalizePinyinForComparison(userText);
-      const normalizedCorrect = normalizePinyinForComparison(correctPinyinNumbers);
+      // Exact match: compare user tone-mark input with dataset pinyin (tone marks).
+      const normalizedUser = normalizePinyinForExactMatch(userText);
+      const normalizedCorrect = normalizePinyinForExactMatch(correctPinyinDisplay);
       const isCorrect = Boolean(
         normalizedUser &&
         normalizedCorrect &&
@@ -118,7 +117,7 @@ export async function POST(request: Request) {
         Section: "Writing",
         Question: `English: ${String(q.prompt ?? "")}`,
         "Your answer": userText,
-        "Correct answer": correctPinyinDisplay || correctPinyinNumbers,
+        "Correct answer": correctPinyinDisplay,
         Result: isCorrect ? "Correct" : "Incorrect",
       });
     }

@@ -488,11 +488,10 @@ def tests_submit(
             })
         else:
             writing_total += 1
-            correct_pinyin_numbers = str(q.get("correct_pinyin_numbers", "")).strip()
             correct_pinyin_display = str(q.get("correct_pinyin_display", "")).strip()
             user_text = user_ans if isinstance(user_ans, str) and str(user_ans).strip() else "(no answer)"
             user_raw = str(user_ans).strip().lower().replace(" ", "") if isinstance(user_ans, str) else ""
-            correct_raw = correct_pinyin_numbers.strip().lower().replace(" ", "")
+            correct_raw = correct_pinyin_display.strip().lower().replace(" ", "")
             is_correct = bool(user_raw and correct_raw and user_raw == correct_raw)
             if is_correct:
                 writing_correct += 1
@@ -500,7 +499,7 @@ def tests_submit(
                 "Q#": i + 1, "Section": "Writing",
                 "Question": f"English: {q.get('prompt', '')}",
                 "Your answer": user_text,
-                "Correct answer": correct_pinyin_display or correct_pinyin_numbers,
+                "Correct answer": correct_pinyin_display,
                 "Result": "Correct" if is_correct else "Incorrect",
             })
 

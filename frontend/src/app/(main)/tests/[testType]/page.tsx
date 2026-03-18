@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import QuizCard from "@/components/ui/QuizCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ToneKeyboard from "@/components/ToneKeyboard";
 
 type Question = {
   section: string;
@@ -181,9 +182,9 @@ export default function TestRunPage() {
 
   if (result) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8 min-w-0">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="text-2xl font-bold text-slate-100">{TITLES[testType]} – Result</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-100">{TITLES[testType]} – Result</h1>
           <Link href="/tests" className="btn-primary">Back to Tests</Link>
         </div>
         <div className="card p-6 space-y-4">
@@ -197,9 +198,32 @@ export default function TestRunPage() {
             <p className="text-amber-500 text-base font-medium">A result for today was already saved. This attempt was not stored again.</p>
           )}
         </div>
-        <section>
-          <h2 className="text-lg font-semibold text-slate-200 mb-4">Test Review</h2>
-          <div className="card overflow-hidden">
+        <section className="min-w-0">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-200 mb-4">Test Review</h2>
+          {/* Mobile: card list */}
+          <div className="md:hidden space-y-3">
+            {result.review_rows.map((r, i) => (
+              <div
+                key={i}
+                className="card p-4 border border-slate-700/50 rounded-button space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-slate-500 text-sm">Q{r["Q#"]}</span>
+                  <span className="text-slate-400 text-sm">{r.Section}</span>
+                  <span className={r.Result === "Correct" ? "text-green-400" : "text-red-400"}>
+                    {r.Result === "Correct" ? "✓" : "✗"}
+                  </span>
+                </div>
+                <p className="text-slate-300 text-sm break-words">{r.Question}</p>
+                <div className="text-sm space-y-0.5">
+                  <p className="text-slate-400">Your answer: <span className="text-slate-200">{r["Your answer"]}</span></p>
+                  <p className="text-slate-400">Correct: <span className="text-slate-200">{r["Correct answer"]}</span></p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: table */}
+          <div className="hidden md:block card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-base">
                 <thead>
@@ -288,13 +312,17 @@ export default function TestRunPage() {
       {q.section === "writing" && (
         <>
           <p className="text-lg text-slate-200 mb-2">English: {q.prompt}</p>
-          <p className="text-base font-medium text-slate-500 mb-3">Type the pinyin with tone numbers (e.g. peng2you3)</p>
+          <p className="text-base font-medium text-slate-500 mb-3">Type the pinyin; use the tone buttons to add tone marks to the last vowel.</p>
           <input
             type="text"
             value={(answers[index] as string) || ""}
             onChange={(e) => setAnswers((a) => ({ ...a, [index]: e.target.value }))}
             className="input-field max-w-md"
-            placeholder="pinyin"
+            placeholder="pinyin (e.g. péngyou)"
+          />
+          <ToneKeyboard
+            value={(answers[index] as string) || ""}
+            onChange={(value) => setAnswers((a) => ({ ...a, [index]: value }))}
           />
         </>
       )}

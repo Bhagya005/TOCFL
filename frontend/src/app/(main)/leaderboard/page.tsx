@@ -37,8 +37,8 @@ export default function LeaderboardPage() {
   const rows = data.leaderboard || [];
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-100">Leaderboard</h1>
+    <div className="space-y-6 sm:space-y-8 min-w-0">
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-100">Leaderboard</h1>
       {rows.length === 0 ? (
         <EmptyState
           title="No stats yet"

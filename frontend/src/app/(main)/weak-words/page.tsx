@@ -35,8 +35,8 @@ export default function WeakWordsPage() {
 
   if (data.words.length === 0) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-100">Weak Words</h1>
+      <div className="space-y-6 min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-100">Weak Words</h1>
         <EmptyState
           title="No weak words yet"
           description="A word becomes weak after 3 mistakes. Keep practicing!"
@@ -47,10 +47,30 @@ export default function WeakWordsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-100">Weak Words</h1>
-      <p className="text-slate-400 text-base font-medium">Words you&apos;ve missed 3+ times. Review them in flashcards.</p>
-      <div className="card overflow-hidden">
+    <div className="space-y-6 sm:space-y-8 min-w-0">
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-100">Weak Words</h1>
+      <p className="text-slate-400 text-sm sm:text-base font-medium">Words you&apos;ve missed 3+ times. Review them in flashcards.</p>
+
+      {/* Mobile: card list */}
+      <div className="md:hidden space-y-3">
+        {data.words.map((w) => (
+          <div
+            key={w.id}
+            className="card p-4 border border-slate-700/50 rounded-button space-y-1"
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-lg font-semibold text-slate-100">{w.character}</span>
+              <span className="text-sm text-slate-500">#{w.id}</span>
+            </div>
+            <p className="text-slate-300 text-sm">{w.pinyin}</p>
+            <p className="text-slate-200">{w.meaning}</p>
+            {w.pos && <p className="text-xs text-slate-500">{w.pos}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-base">
             <thead>

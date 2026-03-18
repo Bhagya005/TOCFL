@@ -78,10 +78,10 @@ export default function FlashcardCard({
           Flip
         </button>
         <button type="button" onClick={onKnew} className="btn-primary w-full sm:w-auto">
-          I knew this
+         Yes
         </button>
         <button type="button" onClick={onDidNotKnow} className="btn-secondary w-full sm:w-auto">
-          I didn&apos;t know
+          No
         </button>
       </div>
       {onReset && (
