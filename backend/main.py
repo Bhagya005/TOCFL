@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import unicodedata
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -491,8 +492,8 @@ def tests_submit(
                 str(q.get("correct_pinyin", "") or q.get("correct_pinyin_display", "") or q.get("correct_pinyin_numbers", "") or "").strip()
             )
             user_text = user_ans if isinstance(user_ans, str) and str(user_ans).strip() else "(no answer)"
-            user_compare = " ".join(str(user_ans or "").strip().split()) if isinstance(user_ans, str) else ""
-            correct_compare = " ".join(correct_pinyin.split())
+            user_compare = unicodedata.normalize("NFC", " ".join(str(user_ans or "").strip().split())) if isinstance(user_ans, str) else ""
+            correct_compare = unicodedata.normalize("NFC", " ".join(correct_pinyin.split()))
             is_correct = bool(correct_pinyin and user_compare and user_compare == correct_compare)
             if is_correct:
                 writing_correct += 1

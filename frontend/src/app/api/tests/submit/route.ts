@@ -5,7 +5,8 @@ import { getCurrentStudyDay } from "@/lib/study-progress";
 
 /** For writing test: compare using only trim + collapse spaces. No character transformation. */
 function writingCompareValue(s: string): string {
-  return s.trim().replace(/\s+/g, " ").trim();
+  // Normalize Unicode composition so visually identical tone marks compare equal.
+  return s.trim().replace(/\s+/g, " ").trim().normalize("NFC");
 }
 import { supabase } from "@/lib/supabase-server";
 
