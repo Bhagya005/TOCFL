@@ -95,7 +95,7 @@ export default function TestRunPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     total_correct: number;
     total: number;
@@ -113,7 +113,6 @@ export default function TestRunPage() {
 
   const limits = TEST_LIMITS[testType as TestType] ?? TEST_LIMITS.daily;
   const [questionCount, setQuestionCount] = useState<number>(limits.default);
-  const [testStarted, setTestStarted] = useState(false);
 
   const loadTest = useCallback((count: number) => {
     setLoading(true);
@@ -127,7 +126,6 @@ export default function TestRunPage() {
         setQuestions(res.questions);
         setAnswers({});
         setIndex(0);
-        setTestStarted(true);
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
@@ -135,7 +133,6 @@ export default function TestRunPage() {
 
   useEffect(() => {
     setQuestionCount(limits.default);
-    setTestStarted(false);
   }, [testType, limits.default]);
 
   const submitTest = useCallback(async () => {
